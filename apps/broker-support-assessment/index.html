@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broker Support Knowledge Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-1:#16294B;
+    --navy-2:#0E1B33;
+    --navy-3:#091327;
+    --gold:#C1A368;
+    --gold-light:#E3C57D;
+    --paper:#F7F5EF;
+    --paper-line:#E4DFD1;
+    --ink:#1B2434;
+    --ink-soft:#5B6478;
+    --good:#3E7A52;
+    --bad:#B34A3C;
+    --warn:#B8902E;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Poppins',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ===== Top bar / hero ===== */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:radial-gradient(120% 180% at 15% -20%, var(--navy-1), var(--navy-2) 55%, var(--navy-3) 100%);
+    color:#fff;
+    padding:16px 22px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    box-shadow:0 6px 18px rgba(9,19,39,0.25);
+  }
+  .topbar .brand{display:flex; flex-direction:column; gap:2px;}
+  .topbar .eyebrow{
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.14em; text-transform:uppercase;
+    font-size:11px; color:var(--gold-light);
+  }
+  .topbar .title{font-weight:700; font-size:16px;}
+  .topbar .status{display:flex; align-items:center; gap:18px;}
+  .clock{
+    font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(227,197,125,0.35);
+    padding:6px 14px; border-radius:10px; min-width:96px; text-align:center;
+    letter-spacing:.03em;
+  }
+  .clock.tick{animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{border-color:rgba(227,197,125,0.35);} 50%{border-color:rgba(227,197,125,0.9);}}
+  .progress-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--gold-light);
+    border:1px solid rgba(227,197,125,0.35); padding:6px 12px; border-radius:999px;
+  }
+
+  .wrap{max-width:880px; margin:0 auto; padding:28px 20px 90px;}
+
+  /* ===== Intro screen ===== */
+  .intro-hero{
+    background:radial-gradient(120% 160% at 20% -10%, var(--navy-1), var(--navy-2) 55%, var(--navy-3) 100%);
+    color:#fff; border-radius:20px; padding:40px 34px; margin-bottom:26px;
+    position:relative; overflow:hidden;
+  }
+  .intro-hero::after{
+    content:""; position:absolute; right:-60px; top:-60px; width:260px; height:260px;
+    border-radius:50%; background:radial-gradient(circle, rgba(184,144,46,0.35), transparent 70%);
+  }
+  .intro-hero .eyebrow{font-family:'IBM Plex Mono',monospace; letter-spacing:.16em; text-transform:uppercase; font-size:12px; color:var(--gold-light); margin-bottom:10px;}
+  .intro-hero h1{font-size:30px; font-weight:800; margin:0 0 12px; line-height:1.15;}
+  .intro-hero p{font-size:15px; line-height:1.6; color:#DCE3F0; max-width:560px; margin:0 0 6px;}
+
+  .card{
+    background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius);
+    padding:24px; margin-bottom:18px;
+  }
+  .card h3{margin:0 0 12px; font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-1); font-family:'IBM Plex Mono',monospace;}
+  .rules-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px;}
+  .rule-item{display:flex; gap:12px; align-items:flex-start;}
+  .rule-item .n{
+    font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--gold); font-size:13px;
+    background:#FBF3E3; border:1px solid var(--gold-light); border-radius:8px; padding:2px 8px; flex-shrink:0;
+  }
+  .rule-item p{margin:0; font-size:13.5px; color:var(--ink-soft); line-height:1.5;}
+
+  label.field-label{display:block; font-size:12.5px; font-weight:600; color:var(--navy-1); margin-bottom:6px; font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;}
+  input.text-input, input.name-input{
+    width:100%; padding:11px 13px; border:1.5px solid var(--paper-line); border-radius:10px;
+    font-family:'Poppins',sans-serif; font-size:14px; color:var(--ink); background:#FCFBF8;
+  }
+  input.text-input:focus, input.name-input:focus{outline:none; border-color:var(--gold);}
+
+  .btn{
+    font-family:'Poppins',sans-serif; font-weight:600; font-size:14.5px; border:none; cursor:pointer;
+    padding:13px 26px; border-radius:45px; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn-primary{background:var(--gold); color:#241A05; box-shadow:0 6px 16px rgba(184,144,46,0.35);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(184,144,46,0.45);}
+  .btn-primary:disabled{opacity:.45; cursor:not-allowed; transform:none; box-shadow:none;}
+  .btn-ghost{background:transparent; color:var(--navy-1); border:1.5px solid var(--paper-line);}
+  .btn-ghost:hover{border-color:var(--gold);}
+  .btn-row{display:flex; justify-content:flex-end; gap:12px; margin-top:6px;}
+
+  /* ===== Section / exhibit styling ===== */
+  .section-head{
+    display:flex; align-items:baseline; gap:12px; margin:34px 0 14px;
+    border-bottom:2px solid var(--navy-1); padding-bottom:8px;
+  }
+  .section-head .tag{
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; letter-spacing:.1em;
+    color:#fff; background:var(--navy-1); padding:4px 10px; border-radius:6px;
+  }
+  .section-head h2{font-size:17px; margin:0; color:var(--navy-1);}
+  .section-marks{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+
+  .exhibit{
+    background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius);
+    margin-bottom:16px; overflow:hidden; box-shadow:0 2px 8px rgba(9,19,39,0.04);
+  }
+  .exhibit-tab{
+    background:var(--navy-1); color:var(--gold-light); font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; padding:8px 16px;
+  }
+  .exhibit-body{padding:16px 18px;}
+  .exhibit-note{
+    font-size:12.5px; color:var(--ink-soft); background:#FBF9F3; border-left:3px solid var(--gold-light);
+    padding:9px 12px; border-radius:6px; margin-bottom:12px; line-height:1.5;
+  }
+  table.payslip{width:100%; border-collapse:collapse; font-size:13px;}
+  table.payslip td{padding:7px 10px; border-bottom:1px solid var(--paper-line);}
+  table.payslip tr:last-child td{border-bottom:none;}
+  table.payslip td:first-child{color:var(--ink-soft); width:46%;}
+  table.payslip td.num{font-family:'IBM Plex Mono',monospace; text-align:right;}
+  table.payslip tr.total td{font-weight:700; background:#FBF9F3;}
+
+  .qcard{background:#fff; border:1px solid var(--paper-line); border-radius:var(--radius); padding:20px 22px; margin-bottom:14px;}
+  .qcard .qhead{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px;}
+  .qcard .qtitle{font-weight:600; font-size:14.5px; line-height:1.5; margin:0;}
+  .qcard .marks{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--gold); background:#FBF3E3; border:1px solid var(--gold-light); border-radius:8px; padding:2px 9px; white-space:nowrap;}
+  .qcard .qhint{font-size:12.5px; color:var(--ink-soft); margin:0 0 12px; line-height:1.5;}
+
+  .answer-number{display:flex; align-items:center; gap:8px; max-width:260px;}
+  .answer-number span{font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);}
+  .answer-number input{
+    flex:1; padding:10px 12px; border:1.5px solid var(--paper-line); border-radius:10px;
+    font-family:'IBM Plex Mono',monospace; font-size:14px;
+  }
+  .answer-number input:focus{outline:none; border-color:var(--gold);}
+
+  .opt-list{display:flex; flex-direction:column; gap:8px;}
+  .opt{
+    display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1.5px solid var(--paper-line);
+    border-radius:10px; cursor:pointer; font-size:13.5px; line-height:1.45; transition:border-color .12s, background .12s;
+  }
+  .opt:hover{border-color:var(--gold-light);}
+  .opt input{margin-top:3px; accent-color:var(--gold);}
+  .opt.checked{border-color:var(--gold); background:#FBF7EC;}
+
+  /* ===== Results ===== */
+  .score-hero{
+    background:radial-gradient(120% 160% at 20% -10%, var(--navy-1), var(--navy-2) 55%, var(--navy-3) 100%);
+    color:#fff; border-radius:20px; padding:36px 32px; text-align:center; margin-bottom:24px;
+  }
+  .score-hero .eyebrow{font-family:'IBM Plex Mono',monospace; letter-spacing:.16em; text-transform:uppercase; font-size:12px; color:var(--gold-light); margin-bottom:8px;}
+  .score-big{font-size:56px; font-weight:800; line-height:1;}
+  .score-sub{color:#DCE3F0; font-size:14px; margin-top:8px;}
+  .badge-row{display:flex; justify-content:center; gap:28px; margin-top:22px; flex-wrap:wrap;}
+  .badge{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--gold-light); text-align:center;}
+  .badge b{display:block; font-size:19px; color:#fff; font-family:'Poppins',sans-serif; font-weight:700;}
+
+  .review-item{background:#fff; border:1px solid var(--paper-line); border-radius:12px; padding:16px 18px; margin-bottom:10px;}
+  .review-item .rhead{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
+  .review-item .rtitle{font-weight:600; font-size:13.5px; margin:0;}
+  .review-item .rmark{font-family:'IBM Plex Mono',monospace; font-size:12px; border-radius:8px; padding:3px 9px; white-space:nowrap;}
+  .rmark.full{background:#E9F4EC; color:var(--good); border:1px solid #BFE2C7;}
+  .rmark.partial{background:#FBF3E3; color:var(--warn); border:1px solid var(--gold-light);}
+  .rmark.zero{background:#FBECEA; color:var(--bad); border:1px solid #EFC3BC;}
+  .rexplain{font-size:12.5px; color:var(--ink-soft); margin-top:8px; line-height:1.55; border-top:1px dashed var(--paper-line); padding-top:8px;}
+  .ryour{font-size:12.5px; margin-top:6px; font-family:'IBM Plex Mono',monospace; color:var(--ink);}
+
+  .section-score-strip{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;}
+  .sstrip{
+    flex:1; min-width:150px; background:#fff; border:1px solid var(--paper-line); border-radius:12px;
+    padding:12px 14px;
+  }
+  .sstrip .lbl{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);}
+  .sstrip .val{font-weight:700; font-size:16px; color:var(--navy-1); margin-top:3px;}
+  .bar{height:6px; background:var(--paper-line); border-radius:4px; margin-top:8px; overflow:hidden;}
+  .bar > div{height:100%; background:var(--gold);}
+
+  .hidden{display:none !important;}
+  .unanswered-flag{font-size:11.5px; color:var(--bad); font-family:'IBM Plex Mono',monospace; margin-top:6px;}
+  footer.note{font-size:11.5px; color:var(--ink-soft); text-align:center; margin-top:30px; line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="eyebrow">Your Virtual Partner &middot; Broker Support</span>
+    <span class="title">Knowledge Assessment</span>
+  </div>
+  <div class="status">
+    <span class="progress-pill" id="progressPill">Not started</span>
+    <span class="clock mono" id="clockDisplay">00:00</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ================= INTRO ================= -->
+  <div id="screen-intro">
+    <div class="intro-hero">
+      <div class="eyebrow">File Review &middot; Income Verification &middot; Credit &amp; Servicing</div>
+      <h1>Broker Support Knowledge Assessment</h1>
+      <p>Ten exhibit-based scenarios plus a broader credit &amp; servicing round — covering income verification, add-backs, credit file review, liabilities, and valuation checks. Every question is auto-scored the moment you submit, and the clock is running from the first click.</p>
+      <p class="mono" style="font-size:12.5px; color:var(--gold-light);">All names, employers, ABNs and figures are fictional, for training purposes only.</p>
+    </div>
+
+    <div class="card">
+      <h3>Before you start</h3>
+      <div class="rules-grid">
+        <div class="rule-item"><span class="n">01</span><p>Suggested time is <b>60&ndash;75 minutes</b>. The timer runs continuously and is shown on the results page &mdash; it does not cut you off.</p></div>
+        <div class="rule-item"><span class="n">02</span><p>Numeric answers are marked with a small tolerance for rounding. Enter figures as plain numbers (no $ or commas).</p></div>
+        <div class="rule-item"><span class="n">03</span><p>Checklist questions may have more than one correct item &mdash; select every item you'd genuinely check, and nothing you wouldn't.</p></div>
+        <div class="rule-item"><span class="n">04</span><p>You'll get your score, a time-per-section breakdown, and the full model answer key immediately after submitting.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Candidate details</h3>
+      <label class="field-label">Full name</label>
+      <input class="name-input" id="candidateName" placeholder="e.g. J. Nguyen" style="margin-bottom:14px;">
+      <label class="field-label">Role / team (optional)</label>
+      <input class="name-input" id="candidateRole" placeholder="e.g. Broker Support &ndash; Credit Team">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="startBtn">Start assessment &amp; timer</button>
+    </div>
+  </div>
+
+  <!-- ================= EXAM ================= -->
+  <div id="screen-exam" class="hidden"></div>
+  <div id="exam-submit-row" class="btn-row hidden" style="margin-top:24px;">
+    <span class="unanswered-flag" id="unansweredFlag"></span>
+    <button class="btn btn-primary" id="submitBtn">Submit &amp; get my score</button>
+  </div>
+
+  <!-- ================= RESULTS ================= -->
+  <div id="screen-results" class="hidden"></div>
+
+  <footer class="note">Internal training tool &middot; Your Virtual Partner Broker Support &middot; scoring is indicative and does not replace assessor sign-off on written reasoning.</footer>
+</div>
+
+<script>
+/* ============================================================
+   QUESTION BANK
+   Types: "number" | "mcq" | "multi"
+   ============================================================ */
+
+function exhibit(tab, noteHtml, rowsHtml){
+  return `<div class="exhibit"><div class="exhibit-tab">${tab}</div><div class="exhibit-body">
+    ${noteHtml ? `<div class="exhibit-note">${noteHtml}</div>` : ""}
+    <table class="payslip">${rowsHtml}</table>
+  </div></div>`;
+}
+function row(a,b,total){ return `<tr class="${total?'total':''}"><td>${a}</td><td class="num">${b}</td></tr>`; }
+
+const EXHIBIT_A = exhibit("Exhibit A &middot; Payslip &mdash; Casual Employee",
+  "J. Nguyen, Casual Retail Assistant, Coastal Retail Group Pty Ltd. Fortnightly pay, pay period 3 of the FY (14 weeks elapsed). Hours vary week to week &mdash; not on a fixed roster.",
+  row("Ordinary hours (58.5 hrs @ $24.78)","This period $1,449.63 / YTD $7,720.00") +
+  row("Casual loading 25% ($6.20/hr)","This period $362.70 / YTD $2,130.00") +
+  row("PAYG withholding","YTD ($1,576.00)") +
+  row("Net pay this period / YTD gross","$1,522.33 / <b>$9,850.00</b>",true)
+);
+
+const EXHIBIT_B = exhibit("Exhibit B &middot; Payslip &mdash; Overtime Income",
+  "M. Thompson, Leading Hand Carpenter, BuildRight Construction Pty Ltd. Full-time permanent, weekly pay, week 27 of the FY. Employer confirms overtime is regular but not guaranteed.",
+  row("Ordinary hours (38 hrs @ $42.00)","This period $1,596.00 / YTD $41,496.00") +
+  row("Overtime &mdash; 1.5x (6 hrs @ $63.00)","This period $378.00 / YTD $6,240.00") +
+  row("Net pay this period / YTD gross","$1,476.00 / <b>$47,736.00</b>",true)
+);
+
+const EXHIBIT_C = exhibit("Exhibit C &middot; Payslip &mdash; Bonus Income",
+  "S. Patel, Warehouse Supervisor, Horizon Logistics Pty Ltd. Base salary $78,000 p.a., monthly pay. Employer letter confirms the bonus is quarterly and discretionary, subject to warehouse KPI targets. PAYG income statements show bonus of $7,200 (FY2024) and $8,100 (FY2025).",
+  row("Base salary","This period $6,500.00 / YTD $58,500.00") +
+  row("Quarterly performance bonus","This period $2,400.00 / YTD $6,800.00") +
+  row("Net pay this period / YTD gross","$6,850.00 / <b>$51,100.00</b>",true)
+);
+
+const EXHIBIT_D = exhibit("Exhibit D &middot; Payslip &mdash; Frequency of Pay vs YTD",
+  "R. Wallace, Registered Nurse, Bayside Health Services. Fortnightly, pay 3 of the FY. EBA pay increment took effect from the second pay run &mdash; current fortnightly rate is $3,850.00.",
+  row("Pay 1 &mdash; pre-EBA rate","$3,600.00") +
+  row("Pay 2 &mdash; new EBA rate applied","$3,850.00") +
+  row("Pay 3 (this payslip) &mdash; new EBA rate","$3,850.00") +
+  row("YTD gross (3 pays, 6 weeks elapsed)","<b>$11,300.00</b>",true)
+);
+
+const EXHIBIT_E = exhibit("Exhibit E &middot; Profit &amp; Loss &mdash; Self-Employed Applicant (2 years)",
+  "GreenLeaf Landscaping Pty Ltd, T. Chen sole director/100% shareholder. Full doc, 2 years' financials. *1 standard depreciation. *2 FY24 only: trade-in/write-off of an old truck. *3 relates to a $45,000 equipment loan being repaid in full as part of the current refinance. *4 FY24 only: one-off supplier contract dispute, not expected to recur. *5 FY25 only: one-off redundancy from route optimisation, not expected to recur.",
+  row("Revenue","FY24 $410,000.00 / FY25 $455,000.00") +
+  row("Net Profit Before Tax","FY24 <b>$58,000.00</b> / FY25 <b>$72,850.00</b>",true) +
+  row("Depreciation *1","FY24 ($8,200.00) / FY25 ($9,400.00)") +
+  row("Loss on disposal of asset *2","FY24 ($3,100.00) / FY25 $0.00") +
+  row("Interest expense &mdash; business loan *3","FY24 ($2,800.00) / FY25 ($2,500.00)") +
+  row("Legal fees &mdash; contract dispute *4","FY24 ($4,600.00) / FY25 $0.00") +
+  row("Redundancy payout &mdash; restructuring *5","FY24 $0.00 / FY25 ($6,800.00)") +
+  row("Fringe benefits tax","FY24 ($1,600.00) / FY25 ($1,700.00)")
+);
+
+const EXHIBIT_F = exhibit("Exhibit F &middot; Payslip &mdash; Salary Sacrifice",
+  "L. Farrow, Marketing Manager, Vantage Financial Services Pty Ltd. Total salary package $95,000 p.a., fortnightly, pay 10 (20 weeks elapsed). *1 novated lease funding a personal vehicle, 4-year term, deducted pre-tax. *2 voluntary additional super, on top of compulsory SG.",
+  row("Base salary (package, before sacrifice)","This period $3,653.85 / YTD $36,538.50") +
+  row("Salary sacrifice &mdash; novated lease *1","This period ($350.00) / YTD ($3,500.00)") +
+  row("Salary sacrifice &mdash; additional super *2","This period ($200.00) / YTD ($2,000.00)") +
+  row("Taxable gross pay","This period $3,103.85 / YTD <b>$31,038.50</b>",true)
+);
+
+const QUESTIONS = [
+  // ---------------- SECTION 1 ----------------
+  {section:"1", secTitle:"Casual, Overtime &amp; Bonus Income", exhibit:EXHIBIT_A, id:"q1",
+   title:"J. Nguyen's YTD gross is $9,850.00 with 14 weeks of the FY elapsed. Calculate her annualised income for servicing purposes.",
+   hint:"Enter the annual figure in dollars.", type:"number", points:5, unit:"$ / year", tolerance:60,
+   answer:36585.71, explain:"$9,850.00 \u00F7 14 weeks = $703.57/week \u00D7 52 = $36,585.71 p.a."},
+
+  {section:"1", exhibit:EXHIBIT_B, id:"q2a",
+   title:"Calculate M. Thompson's base annual salary from the ordinary hourly rate.",
+   type:"number", points:4, unit:"$ / year", tolerance:25,
+   answer:82992, explain:"$1,596.00 \u00D7 52 = $82,992.00 base salary."},
+
+  {section:"1", id:"q2b",
+   title:"Overtime is confirmed regular but not guaranteed. Calculate the overtime income to be used for servicing, applying an 80% shading.",
+   type:"number", points:5, unit:"$ / year", tolerance:25,
+   answer:9984, explain:"$6,240.00 \u00F7 26 weeks = $240.00/week \u00D7 52 = $12,480.00 annualised, then \u00D7 80% shading = $9,984.00."},
+
+  {section:"1", exhibit:EXHIBIT_C, id:"q3a",
+   title:"The bonus is quarterly and discretionary. Which income figure should you rely on for servicing?",
+   type:"mcq", points:3,
+   options:[
+     {id:"a", text:"The YTD bonus figure, annualised as-is"},
+     {id:"b", text:"The average of the two prior full financial years' bonus, shaded"},
+     {id:"c", text:"The single highest of the two prior years, unshaded"},
+     {id:"d", text:"Exclude bonus income entirely since it's discretionary"}],
+   correct:"b",
+   explain:"Use the two prior full financial years, not YTD annualised \u2014 a discretionary, KPI-based bonus needs a demonstrated history rather than a partial-year figure that could overstate or understate it."},
+
+  {section:"1", id:"q3b",
+   title:"Using the two-year average shaded at 80%, calculate the total base + bonus servicing figure.",
+   hint:"Base salary is $78,000 p.a. Prior bonus years: $7,200 (FY2024) and $8,100 (FY2025).",
+   type:"number", points:5, unit:"$ / year", tolerance:30,
+   answer:84120, explain:"Average bonus = ($7,200 + $8,100) \u00F7 2 = $7,650.00, shaded 80% = $6,120.00. Total = $78,000.00 + $6,120.00 = $84,120.00 p.a."},
+
+  {section:"1", exhibit:EXHIBIT_D, id:"q4a",
+   title:"Calculate an annual income figure using YTD gross \u00F7 weeks elapsed \u00D7 52.",
+   type:"number", points:4, unit:"$ / year", tolerance:60,
+   answer:97933.33, explain:"$11,300.00 \u00F7 6 weeks = $1,883.33/week \u00D7 52 = $97,933.33 p.a."},
+
+  {section:"1", id:"q4b",
+   title:"Calculate an annual income figure using the current fortnightly pay.",
+   type:"number", points:4, unit:"$ / year", tolerance:25,
+   answer:100100, explain:"$3,850.00 \u00D7 26 = $100,100.00 p.a."},
+
+  {section:"1", id:"q4c",
+   title:"Which of the two figures should you actually use, and why?",
+   type:"mcq", points:4,
+   options:[
+     {id:"a", text:"The YTD/weeks-elapsed figure \u2014 it reflects the full year including the pre-increment pay"},
+     {id:"b", text:"The current fortnightly rate \u00D7 26 \u2014 Pay 1 was at the old rate and dilutes the YTD figure"},
+     {id:"c", text:"Take a simple average of the two figures"},
+     {id:"d", text:"Neither \u2014 request a further 3 months of payslips before assessing"}],
+   correct:"b",
+   explain:"The YTD/weeks-elapsed method is diluted by Pay 1 at the old, pre-increment rate, understating current earning capacity. The current fortnightly rate \u00D7 26 is more representative, supported by the payslip and file note confirming the new rate is in effect."},
+
+  // ---------------- SECTION 2 ----------------
+  {section:"2", secTitle:"Self-Employed Financials &amp; Add-backs", exhibit:EXHIBIT_E, id:"q5",
+   title:"Which FY2024 expense items are genuine, lender-acceptable add-backs?",
+   hint:"Select every item you would add back.", type:"multi", points:6,
+   options:[
+     {id:"dep", text:"Depreciation \u2014 plant &amp; equipment ($8,200.00)"},
+     {id:"disp", text:"Loss on disposal of asset \u2014 truck write-off ($3,100.00)"},
+     {id:"legal", text:"Legal fees \u2014 contract dispute ($4,600.00)"},
+     {id:"int", text:"Interest expense \u2014 business loan ($2,800.00)"},
+     {id:"fbt", text:"Fringe benefits tax ($1,600.00)"},
+     {id:"wages", text:"Wages &amp; salaries (excl. director)"}],
+   correctSet:["dep","disp","legal"],
+   explain:"Depreciation and the truck write-off are non-cash. The legal dispute is a one-off, per the file note. FY2024 interest is an ongoing cost of debt not being discharged this year, and FBT is a recurring cost of providing benefits \u2014 neither is an add-back here. Wages are a genuine ongoing operating cost."},
+
+  {section:"2", id:"q5b",
+   title:"Calculate the add-back-adjusted Net Profit Before Tax for FY2024.",
+   type:"number", points:5, unit:"$", tolerance:60,
+   answer:73900, explain:"$58,000.00 + $8,200.00 (depreciation) + $3,100.00 (disposal) + $4,600.00 (legal) = $73,900.00."},
+
+  {section:"2", id:"q6",
+   title:"Which FY2025 items are genuine add-backs, given the $45,000 equipment loan (generating the interest expense) is being fully repaid as part of this refinance?",
+   type:"multi", points:6,
+   options:[
+     {id:"dep25", text:"Depreciation \u2014 plant &amp; equipment ($9,400.00)"},
+     {id:"redund", text:"Redundancy payout \u2014 restructuring ($6,800.00)"},
+     {id:"int25", text:"Interest expense \u2014 business loan being repaid in this refinance ($2,500.00)"},
+     {id:"fbt25", text:"Fringe benefits tax ($1,700.00)"},
+     {id:"rent", text:"Rent \u2014 depot &amp; office"}],
+   correctSet:["dep25","redund","int25"],
+   explain:"Depreciation is non-cash and the redundancy is a one-off, per the file note. Unlike FY2024, this interest relates to a loan being discharged by the new facility, so it will not continue \u2014 most lenders treat it as an add-back here. FBT and rent remain genuine recurring costs."},
+
+  {section:"2", id:"q6b",
+   title:"Calculate the add-back-adjusted NPBT for FY2025 (including the interest add-back).",
+   type:"number", points:5, unit:"$", tolerance:60,
+   answer:91550, explain:"$72,850.00 + $9,400.00 + $6,800.00 + $2,500.00 = $91,550.00."},
+
+  {section:"2", id:"q6c",
+   title:"Calculate the 2-year average of the add-back-adjusted NPBT figures ($73,900.00 and $91,550.00).",
+   type:"number", points:4, unit:"$", tolerance:40,
+   answer:82725, explain:"($73,900.00 + $91,550.00) \u00F7 2 = $82,725.00."},
+
+  {section:"2", id:"q6d",
+   title:"Before relying on the higher FY2025 figure, what should you check?",
+   type:"mcq", points:4,
+   options:[
+     {id:"a", text:"Nothing further \u2014 the add-backs are already verified from the P&amp;L"},
+     {id:"b", text:"Whether the FY2025 growth is genuine and sustainable, supported by BAS or current-year management figures"},
+     {id:"c", text:"Only whether the director wants the higher figure used"},
+     {id:"d", text:"Whether FY2024 can be excluded from the file altogether"}],
+   correct:"b",
+   explain:"Check whether growth is genuine and sustainable \u2014 a one-off contract, changed trading conditions, or reduced expenses that won't recur \u2014 and confirm the trend against BAS/management figures before relying on the single higher year."},
+
+  // ---------------- SECTION 3 ----------------
+  {section:"3", secTitle:"File Review Checklists", id:"q7",
+   title:"An applicant has traded for 3 years but the accountant hasn't finalised the latest return. You're considering an Alt Doc / low-doc pathway. Which documents would you typically expect a lender to require?",
+   type:"multi", points:6,
+   options:[
+     {id:"decl", text:"Signed income declaration / self-certification by the applicant or director"},
+     {id:"acct", text:"Accountant's letter confirming the declared income is reasonable given trading history"},
+     {id:"bas", text:"Last 2\u20134 lodged Business Activity Statements"},
+     {id:"bank", text:"6\u201312 months of business bank statements"},
+     {id:"abn", text:"Evidence of ABN registration and active GST registration"},
+     {id:"verbal", text:"A verbal confirmation of turnover from the applicant is sufficient"}],
+   correctSet:["decl","acct","bas","bank","abn"],
+   explain:"Alt Doc relies on a signed declaration, accountant support, BAS evidence of turnover, bank statements showing trading cash flow, and confirmed ABN/GST registration \u2014 not an unverified verbal figure."},
+
+  {section:"3", id:"q8",
+   title:"You're reviewing an applicant's Equifax credit report as part of file preparation. What should you check?",
+   type:"multi", points:6,
+   options:[
+     {id:"score", text:"Credit score / overall risk rating"},
+     {id:"defaults", text:"Defaults, judgments, write-offs or serious credit infringements, and how recent"},
+     {id:"bankrupt", text:"Bankruptcy or Part IX/X debt agreement history"},
+     {id:"enquiries", text:"Number and recency of credit enquiries"},
+     {id:"facilities", text:"Existing credit facilities \u2014 limits, balances and repayment history, matched to the application"},
+     {id:"holiday", text:"The applicant's most recent overseas holiday destination"}],
+   correctSet:["score","defaults","bankrupt","enquiries","facilities"],
+   explain:"A proper review covers score, adverse listings, bankruptcy history, enquiry patterns (possible financial stress), and existing facilities cross-checked against the application \u2014 the report is an evidence source, not just a score."},
+
+  {section:"3", id:"q9",
+   title:"A valuation has come back for a property subject to unconditional approval. What should you check before releasing it to the credit team?",
+   type:"multi", points:6,
+   options:[
+     {id:"vfig", text:"Valuation figure vs contract price, and the resulting LVR"},
+     {id:"basis", text:"'As is' vs 'as if complete' basis, matched to the loan purpose"},
+     {id:"risk", text:"Risk ratings and adverse comments \u2014 structural issues, defects, essential repairs"},
+     {id:"zoning", text:"Land use, zoning and permissible use"},
+     {id:"comps", text:"Comparable sales used, and whether they support the figure"},
+     {id:"colour", text:"The valuer's personal opinion of the street's kerb appeal, unrelated to any rating"}],
+   correctSet:["vfig","basis","risk","zoning","comps"],
+   explain:"Check the valuation figure and resulting LVR, the as-is/as-complete basis, risk ratings and defects, zoning/permissible use, environmental flags, and whether comparable sales genuinely support the figure \u2014 not unscored subjective colour."},
+
+  // ---------------- SECTION 4 ----------------
+  {section:"4", secTitle:"Salary Sacrifice", exhibit:EXHIBIT_F, id:"q10a",
+   title:"Annualise L. Farrow's YTD taxable gross pay figure ($31,038.50 over 20 weeks elapsed).",
+   type:"number", points:3, unit:"$ / year", tolerance:60,
+   answer:80700.10, explain:"$31,038.50 \u00F7 20 weeks = $1,551.925/week \u00D7 52 \u2248 $80,700.10 p.a."},
+
+  {section:"4", id:"q10b",
+   title:"Annualise the YTD salary sacrifice amounts (novated lease $3,500.00 + additional super $2,000.00 over 20 weeks) combined.",
+   type:"number", points:3, unit:"$ / year", tolerance:30,
+   answer:14300, explain:"Novated lease: $3,500.00 \u00F7 20 \u00D7 52 = $9,100.00. Additional super: $2,000.00 \u00F7 20 \u00D7 52 = $5,200.00. Total = $14,300.00 p.a."},
+
+  {section:"4", id:"q10c",
+   title:"What total gross income figure would you use for servicing?",
+   type:"number", points:4, unit:"$ / year", tolerance:80,
+   answer:95000, explain:"$80,700.10 + $14,300.00 \u2248 $95,000.00 p.a. \u2014 the full salary package. Sacrificed income is voluntarily elected and could be redirected back to cash flow, so it remains part of true earning capacity."},
+
+  {section:"4", id:"q10d",
+   title:"The novated lease sacrifice funds a real vehicle lease commitment, not just a redirection to super. Beyond adding it back to income, what else should this prompt you to do?",
+   type:"mcq", points:4,
+   options:[
+     {id:"a", text:"Nothing further \u2014 adding it back to income is sufficient"},
+     {id:"b", text:"Confirm the lease term and commitment, and check whether it also needs to be captured as a separate liability in the servicing calculator"},
+     {id:"c", text:"Remove the super sacrifice from income since it's now netted against the lease"},
+     {id:"d", text:"Treat the whole sacrificed amount as a one-off and exclude it"}],
+   correct:"b",
+   explain:"Unlike the super sacrifice, the novated lease funds an ongoing commitment. Confirm the lease term, payment and payout figure, and check whether the lender wants that commitment captured separately as a liability \u2014 double-counting or double-omitting it either overstates or understates true capacity."},
+
+  // ---------------- SECTION 5 ----------------
+  {section:"5", secTitle:"Credit Policy &amp; Liabilities \u2014 Broader Round", id:"a1",
+   title:"A client says they \u201cdon't really use\u201d their credit card. How should the limit be treated in servicing?",
+   type:"mcq", points:3,
+   options:[
+     {id:"a", text:"Ignored, since the balance is close to zero"},
+     {id:"b", text:"Assessed on the card limit, not the current balance, using the lender's standard commitment percentage"},
+     {id:"c", text:"Only counted if the applicant has used it in the last 3 months"},
+     {id:"d", text:"Averaged between limit and balance"}],
+   correct:"b",
+   explain:"Lenders assess an unused card on its limit, applying a standard monthly commitment (commonly 2\u20133% of the limit). Limits can be reduced or closed to improve servicing, but that must be actioned before the application, not assumed."},
+
+  {section:"5", id:"a2",
+   title:"A client has a HECS/HELP debt they call \u201cjust there\u201d and an active BNPL facility. How should these be treated?",
+   type:"mcq", points:3,
+   options:[
+     {id:"a", text:"Both can be excluded since neither is a traditional loan"},
+     {id:"b", text:"HECS is ignored below a certain balance; BNPL is always excluded"},
+     {id:"c", text:"HECS is assessed via ATO income-based repayment thresholds; BNPL must be disclosed and assessed per lender policy \u2014 neither is dropped just because it's small or unused"},
+     {id:"d", text:"Both are excluded if the applicant says they plan to pay them off before settlement"}],
+   correct:"c",
+   explain:"HECS repayments are calculated from ATO thresholds and are mandatory to include. BNPL must be disclosed and assessed per the lender's policy (some treat it like a personal loan, others fold it into living expenses) \u2014 it's never dropped just because the client downplays it."},
+
+  {section:"5", id:"a3",
+   title:"An applicant insists a personal loan shouldn't count in servicing because the interest is \u201ctax deductible.\u201d What's the correct response?",
+   type:"mcq", points:3,
+   options:[
+     {id:"a", text:"Agree, and exclude the repayment from servicing"},
+     {id:"b", text:"Explain that tax deductibility doesn't remove the actual repayment commitment \u2014 lenders assess real cash flow impact, and this is separate from how the ATO treats the interest"},
+     {id:"c", text:"Provide tax advice on how the deduction works"},
+     {id:"d", text:"Exclude it only if the applicant provides their tax return"}],
+   correct:"b",
+   explain:"Tax treatment and lending treatment are different things. The debt still reduces net cash flow and must be serviced regardless of deductibility \u2014 and tax questions should be referred to the applicant's accountant, not answered by broker support."},
+
+  {section:"5", id:"a4",
+   title:"A loan has failed a lender's servicing calculator. Before trying another lender, which of these are genuine diagnostic checks or legitimate levers?",
+   type:"multi", points:5,
+   options:[
+     {id:"income", text:"Confirm variable income (overtime/bonus/casual) has been shaded or averaged correctly"},
+     {id:"limits", text:"Check whether unused credit card or BNPL limits can be reduced or closed before submission"},
+     {id:"expenses", text:"Review declared living expenses against lender benchmarks and bank statement evidence"},
+     {id:"buffer", text:"Verify the loan term and serviceability buffer applied are correct"},
+     {id:"another", text:"Immediately move to another lender without establishing why the current one failed"},
+     {id:"inflate", text:"Reduce declared living expenses to a level not supported by the bank statements"}],
+   correctSet:["income","limits","expenses","buffer"],
+   explain:"A genuine diagnostic checks income treatment, liability entry, expenses vs evidence, and structural settings like term/buffer \u2014 then applies legitimate levers (closing unused limits, correcting genuine errors, choosing a more suitable lender). Jumping lenders without diagnosis, or understating expenses below what the evidence supports, are not acceptable approaches."},
+
+  {section:"5", id:"a5",
+   title:"A client has only 15 months of trading with one completed financial year. What's the right way to check whether any lender can accommodate this?",
+   type:"mcq", points:3,
+   options:[
+     {id:"a", text:"Rely on a static internal list of lenders from memory"},
+     {id:"b", text:"Check at least 2\u20133 current lenders' live policy (portal or BDM-confirmed), noting trading history rules, exception criteria, and evidence required, with the source and date recorded"},
+     {id:"c", text:"Assume no lender will accept less than 2 full years and decline the enquiry"},
+     {id:"d", text:"Ask the client to wait 9 months until 2 full years are reached, without checking current policy"},],
+   correct:"b",
+   explain:"Lender policy changes frequently, so research needs to be current and sourced (portal or BDM-confirmed), covering trading history minimums, exception pathways, and evidence required \u2014 not assumed from memory or a blanket 2-year rule."},
+
+  {section:"5", id:"a6",
+   title:"A contract states a $98,400 salary, a payslip shows $8,200 gross for the month, and bank statements show ~$7,500 net credits. The borrower insists $8,200 is correct. What's the right first step?",
+   type:"mcq", points:3,
+   options:[
+     {id:"a", text:"Treat the difference as a red flag and decline the application immediately"},
+     {id:"b", text:"Note that $98,400 \u00F7 12 = $8,200 exactly, and that ~$7,500 net can be consistent with $8,200 gross after PAYG, super and other deductions \u2014 reconcile gross-to-gross and net-to-net rather than assuming an inconsistency"},
+     {id:"c", text:"Use whichever figure the borrower prefers"},
+     {id:"d", text:"Average the three figures together"}],
+   correct:"b",
+   explain:"$98,400 / 12 = $8,200 exactly, so the payslip is consistent with the contract. The lower net credits are not necessarily a discrepancy once PAYG and deductions are accounted for \u2014 compare gross to gross and net to net before treating it as a conflict."},
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let startTime = null, timerInterval = null, submitted = false;
+const sectionTitles = {
+  "1":"Casual, Overtime &amp; Bonus Income",
+  "2":"Self-Employed Financials &amp; Add-backs",
+  "3":"File Review Checklists",
+  "4":"Salary Sacrifice",
+  "5":"Credit Policy &amp; Liabilities \u2014 Broader Round"
+};
+const sectionMarksMap = {};
+QUESTIONS.forEach(q=>{ sectionMarksMap[q.section] = (sectionMarksMap[q.section]||0) + q.points; });
+const totalMarks = QUESTIONS.reduce((s,q)=>s+q.points,0);
+
+function fmtTime(sec){
+  const m = Math.floor(sec/60).toString().padStart(2,'0');
+  const s = Math.floor(sec%60).toString().padStart(2,'0');
+  return m+":"+s;
+}
+
+/* ============================================================
+   RENDER EXAM
+   ============================================================ */
+function renderExam(){
+  const container = document.getElementById('screen-exam');
+  let html = "";
+  let lastSection = null;
+  QUESTIONS.forEach((q, idx) => {
+    if(q.section !== lastSection){
+      lastSection = q.section;
+      html += `<div class="section-head">
+        <span class="tag">SEC ${q.section}</span>
+        <h2>${sectionTitles[q.section]}</h2>
+        <span class="section-marks">${sectionMarksMap[q.section]} marks</span>
+      </div>`;
+    }
+    if(q.exhibit){ html += q.exhibit; }
+    html += `<div class="qcard" data-qid="${q.id}">
+      <div class="qhead">
+        <p class="qtitle">${idx+1}. ${q.title}</p>
+        <span class="marks">${q.points} pt${q.points>1?'s':''}</span>
+      </div>
+      ${q.hint ? `<p class="qhint">${q.hint}</p>` : ""}
+      ${renderInput(q)}
+    </div>`;
+  });
+  container.innerHTML = html;
+
+  // wire up option highlighting + checked state
+  QUESTIONS.forEach(q=>{
+    if(q.type==="mcq" || q.type==="multi"){
+      const els = container.querySelectorAll(`input[name="${q.id}"]`);
+      els.forEach(el=>{
+        el.addEventListener('change', ()=>{
+          updateOptStyling(q);
+          updateProgress();
+        });
+      });
+    } else if(q.type==="number"){
+      const el = container.querySelector(`#input-${q.id}`);
+      el.addEventListener('input', updateProgress);
+    }
+  });
+}
+
+function renderInput(q){
+  if(q.type === "number"){
+    return `<div class="answer-number">
+      <input type="number" step="0.01" id="input-${q.id}" placeholder="0.00">
+      <span>${q.unit||""}</span>
+    </div>`;
+  }
+  if(q.type === "mcq"){
+    return `<div class="opt-list">` + q.options.map(o=>`
+      <label class="opt" data-optwrap="${q.id}-${o.id}">
+        <input type="radio" name="${q.id}" value="${o.id}">
+        <span>${o.text}</span>
+      </label>`).join("") + `</div>`;
+  }
+  if(q.type === "multi"){
+    return `<div class="opt-list">` + q.options.map(o=>`
+      <label class="opt" data-optwrap="${q.id}-${o.id}">
+        <input type="checkbox" name="${q.id}" value="${o.id}">
+        <span>${o.text}</span>
+      </label>`).join("") + `</div>`;
+  }
+  return "";
+}
+
+function updateOptStyling(q){
+  q.options.forEach(o=>{
+    const wrap = document.querySelector(`[data-optwrap="${q.id}-${o.id}"]`);
+    const input = wrap.querySelector('input');
+    wrap.classList.toggle('checked', input.checked);
+  });
+}
+
+/* ============================================================
+   PROGRESS + TIMER
+   ============================================================ */
+function updateProgress(){
+  const answered = QUESTIONS.filter(isAnswered).length;
+  document.getElementById('progressPill').textContent = `${answered} / ${QUESTIONS.length} answered`;
+  document.getElementById('submitBtn').disabled = false;
+}
+function isAnswered(q){
+  if(q.type === "number"){
+    const el = document.getElementById(`input-${q.id}`);
+    return el && el.value.trim() !== "";
+  }
+  if(q.type === "mcq"){
+    return !!document.querySelector(`input[name="${q.id}"]:checked`);
+  }
+  if(q.type === "multi"){
+    return document.querySelectorAll(`input[name="${q.id}"]:checked`).length > 0;
+  }
+  return false;
+}
+
+function startTimer(){
+  startTime = Date.now();
+  const clock = document.getElementById('clockDisplay');
+  clock.classList.add('tick');
+  timerInterval = setInterval(()=>{
+    const elapsed = (Date.now() - startTime)/1000;
+    clock.textContent = fmtTime(elapsed);
+  }, 1000);
+}
+function stopTimer(){
+  clearInterval(timerInterval);
+  document.getElementById('clockDisplay').classList.remove('tick');
+  return (Date.now() - startTime)/1000;
+}
+
+/* ============================================================
+   SCORING
+   ============================================================ */
+function scoreAll(){
+  let totalScore = 0;
+  const perQuestion = [];
+  const sectionScores = {};
+
+  QUESTIONS.forEach(q=>{
+    let earned = 0, userAnswerDisplay = "";
+    if(q.type === "number"){
+      const el = document.getElementById(`input-${q.id}`);
+      const raw = el.value.trim();
+      const val = raw === "" ? null : parseFloat(raw);
+      userAnswerDisplay = raw === "" ? "(no answer)" : `$${Number(val).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+      if(val !== null){
+        const diff = Math.abs(val - q.answer);
+        if(diff <= q.tolerance) earned = q.points;
+        else if(diff <= q.tolerance*4) earned = q.points*0.5;
+        else earned = 0;
+      }
+    } else if(q.type === "mcq"){
+      const sel = document.querySelector(`input[name="${q.id}"]:checked`);
+      userAnswerDisplay = sel ? q.options.find(o=>o.id===sel.value).text : "(no answer)";
+      if(sel && sel.value === q.correct) earned = q.points;
+    } else if(q.type === "multi"){
+      const sels = Array.from(document.querySelectorAll(`input[name="${q.id}"]:checked`)).map(e=>e.value);
+      userAnswerDisplay = sels.length ? sels.map(id=>q.options.find(o=>o.id===id).text).join("; ") : "(no answer)";
+      const correctSet = q.correctSet;
+      const correctSelected = sels.filter(s=>correctSet.includes(s)).length;
+      const incorrectSelected = sels.filter(s=>!correctSet.includes(s)).length;
+      const raw = (correctSelected - incorrectSelected) / correctSet.length;
+      earned = Math.max(0, raw) * q.points;
+    }
+    earned = Math.round(earned*10)/10;
+    totalScore += earned;
+    sectionScores[q.section] = (sectionScores[q.section]||0) + earned;
+    perQuestion.push({q, earned, userAnswerDisplay});
+  });
+
+  return {totalScore, perQuestion, sectionScores};
+}
+
+/* ============================================================
+   RESULTS RENDER
+   ============================================================ */
+function renderResults(elapsedSeconds){
+  const {totalScore, perQuestion, sectionScores} = scoreAll();
+  const pct = Math.round((totalScore/totalMarks)*1000)/10;
+  const name = document.getElementById('candidateName').value.trim() || "Candidate";
+  const role = document.getElementById('candidateRole').value.trim();
+  const passed = pct >= 75;
+
+  let html = `<div class="score-hero">
+    <div class="eyebrow">Assessment complete &middot; ${name}${role ? " &middot; "+role : ""}</div>
+    <div class="score-big">${pct}%</div>
+    <div class="score-sub">${totalScore.toFixed(1)} / ${totalMarks} marks &middot; ${passed ? "Meets the 75% pass benchmark" : "Below the 75% pass benchmark"}</div>
+    <div class="badge-row">
+      <div class="badge">Time taken<b>${fmtTime(elapsedSeconds)}</b></div>
+      <div class="badge">Questions<b>${QUESTIONS.length}</b></div>
+      <div class="badge">Pass mark<b>75%</b></div>
+    </div>
+  </div>`;
+
+  html += `<div class="section-score-strip">`;
+  Object.keys(sectionTitles).forEach(sec=>{
+    const earned = sectionScores[sec]||0;
+    const max = sectionMarksMap[sec];
+    const p = Math.round((earned/max)*100);
+    html += `<div class="sstrip">
+      <div class="lbl">Section ${sec}</div>
+      <div class="val">${earned.toFixed(1)} / ${max}</div>
+      <div class="bar"><div style="width:${p}%"></div></div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="card"><h3>Answer review &amp; model answers</h3></div>`;
+  perQuestion.forEach(({q, earned, userAnswerDisplay})=>{
+    const cls = earned >= q.points ? "full" : (earned > 0 ? "partial" : "zero");
+    const label = earned >= q.points ? "Full marks" : (earned > 0 ? "Partial" : "No marks");
+    html += `<div class="review-item">
+      <div class="rhead">
+        <p class="rtitle">${q.title}</p>
+        <span class="rmark ${cls}">${label} &middot; ${earned.toFixed(1)}/${q.points}</span>
+      </div>
+      <div class="ryour">Your answer: ${userAnswerDisplay}</div>
+      <div class="rexplain">${q.explain}</div>
+    </div>`;
+  });
+
+  html += `<div class="btn-row" style="margin-top:10px;">
+    <button class="btn btn-ghost" onclick="window.print()">Print / save as PDF</button>
+    <button class="btn btn-primary" onclick="location.reload()">Start a new attempt</button>
+  </div>`;
+
+  document.getElementById('screen-results').innerHTML = html;
+}
+
+/* ============================================================
+   WIRE UP
+   ============================================================ */
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  renderExam();
+  document.getElementById('screen-intro').classList.add('hidden');
+  document.getElementById('screen-exam').classList.remove('hidden');
+  document.getElementById('exam-submit-row').classList.remove('hidden');
+  document.getElementById('progressPill').textContent = `0 / ${QUESTIONS.length} answered`;
+  startTimer();
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+document.getElementById('submitBtn').addEventListener('click', ()=>{
+  if(submitted) return;
+  const answered = QUESTIONS.filter(isAnswered).length;
+  if(answered < QUESTIONS.length){
+    const missing = QUESTIONS.length - answered;
+    document.getElementById('unansweredFlag').textContent = `${missing} question${missing>1?'s':''} unanswered \u2014 click again to submit anyway.`;
+    if(!document.getElementById('submitBtn').dataset.confirm){
+      document.getElementById('submitBtn').dataset.confirm = "1";
+      return;
+    }
+  }
+  submitted = true;
+  const elapsed = stopTimer();
+  document.getElementById('screen-exam').classList.add('hidden');
+  document.getElementById('exam-submit-row').classList.add('hidden');
+  renderResults(elapsed);
+  document.getElementById('screen-results').classList.remove('hidden');
+  document.getElementById('progressPill').textContent = "Submitted";
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+</script>
+</body>
+</html>
