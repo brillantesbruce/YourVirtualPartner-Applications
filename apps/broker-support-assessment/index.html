@@ -749,12 +749,47 @@ function scoreAll(){
 /* ============================================================
    RESULTS RENDER
    ============================================================ */
+function submitResultsToBackend(payload){
+  fetch('/.netlify/functions/submit-results', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).then(res=>{
+    if(!res.ok) throw new Error('Bad response: '+res.status);
+    const statusEl = document.getElementById('saveStatus');
+    if(statusEl) statusEl.textContent = "Result saved.";
+  }).catch(err=>{
+    console.error('Failed to save quiz result', err);
+    const statusEl = document.getElementById('saveStatus');
+    if(statusEl) statusEl.textContent = "Could not save your result automatically \u2014 please screenshot or print this page and send it to the quiz master.";
+  });
+}
+
 function renderResults(elapsedSeconds){
   const {totalScore, perQuestion, sectionScores} = scoreAll();
   const pct = Math.round((totalScore/totalMarks)*1000)/10;
   const name = document.getElementById('candidateName').value.trim() || "Candidate";
   const role = document.getElementById('candidateRole').value.trim();
   const passed = pct >= 75;
+
+  submitResultsToBackend({
+    candidate_name: name,
+    candidate_role: role,
+    total_score: totalScore,
+    total_marks: totalMarks,
+    percentage: pct,
+    passed: passed,
+    elapsed_seconds: Math.round(elapsedSeconds),
+    section_scores: sectionScores,
+    answers: perQuestion.map(({q, earned, userAnswerDisplay})=>({
+      id: q.id,
+      section: q.section,
+      title: q.title,
+      points: q.points,
+      earned: earned,
+      answer: userAnswerDisplay
+    }))
+  });
 
   let html = `<div class="score-hero">
     <div class="eyebrow">Assessment complete &middot; ${name}${role ? " &middot; "+role : ""}</div>
@@ -794,7 +829,9 @@ function renderResults(elapsedSeconds){
     </div>`;
   });
 
-  html += `<div class="btn-row" style="margin-top:10px;">
+  html += `<div id="saveStatus" style="font-size:12.5px; color:var(--ink-soft); text-align:right; margin-top:10px;"></div>`;
+
+  html += `<div class="btn-row" style="margin-top:6px;">
     <button class="btn btn-ghost" onclick="window.print()">Print / save as PDF</button>
     <button class="btn btn-primary" onclick="location.reload()">Start a new attempt</button>
   </div>`;

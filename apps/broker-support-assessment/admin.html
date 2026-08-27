@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Results &middot; Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-1:#16294B;
+    --navy-2:#0E1B33;
+    --navy-3:#091327;
+    --gold:#C1A368;
+    --gold-light:#E3C57D;
+    --paper:#F7F5EF;
+    --paper-line:#E4DFD1;
+    --ink:#1B2434;
+    --ink-soft:#5B6478;
+    --good:#3E7A52;
+    --bad:#B34A3C;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:'Poppins',sans-serif; background:var(--paper); color:var(--ink); -webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .topbar{
+    background:radial-gradient(120% 180% at 15% -20%, var(--navy-1), var(--navy-2) 55%, var(--navy-3) 100%);
+    color:#fff; padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .topbar .eyebrow{font-family:'IBM Plex Mono',monospace; letter-spacing:.14em; text-transform:uppercase; font-size:11px; color:var(--gold-light);}
+  .topbar .title{font-weight:700; font-size:16px;}
+
+  .wrap{max-width:1000px; margin:0 auto; padding:28px 20px 90px;}
+
+  .login-card{
+    max-width:380px; margin:60px auto; background:#fff; border:1px solid var(--paper-line);
+    border-radius:var(--radius); padding:28px;
+  }
+  .login-card h2{margin:0 0 16px; font-size:17px; color:var(--navy-1);}
+  label.field-label{display:block; font-size:12.5px; font-weight:600; color:var(--navy-1); margin-bottom:6px; font-family:'IBM Plex Mono',monospace;}
+  input.text-input{
+    width:100%; padding:11px 13px; border:1.5px solid var(--paper-line); border-radius:10px;
+    font-family:'Poppins',sans-serif; font-size:14px; color:var(--ink); background:#FCFBF8; margin-bottom:14px;
+  }
+  input.text-input:focus{outline:none; border-color:var(--gold);}
+  .btn{font-family:'Poppins',sans-serif; font-weight:600; font-size:14.5px; border:none; cursor:pointer; padding:12px 22px; border-radius:45px;}
+  .btn-primary{background:var(--gold); color:#241A05; width:100%;}
+  .btn-ghost{background:transparent; color:var(--navy-1); border:1.5px solid var(--paper-line); padding:8px 16px; font-size:13px;}
+  .error-msg{color:var(--bad); font-size:13px; margin-top:-6px; margin-bottom:12px; display:none;}
+
+  .toolbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; gap:12px; flex-wrap:wrap;}
+  .stat-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .stat{background:#fff; border:1px solid var(--paper-line); border-radius:10px; padding:10px 16px; font-size:13px;}
+  .stat b{display:block; font-size:18px; color:var(--navy-1); font-family:'IBM Plex Mono',monospace;}
+
+  table.results{width:100%; border-collapse:collapse; background:#fff; border-radius:var(--radius); overflow:hidden; border:1px solid var(--paper-line);}
+  table.results th{
+    text-align:left; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--gold-light); background:var(--navy-1); padding:10px 12px;
+  }
+  table.results td{padding:10px 12px; border-bottom:1px solid var(--paper-line); font-size:13.5px; vertical-align:top;}
+  table.results tr:last-child td{border-bottom:none;}
+  table.results tr:hover td{background:#FBF9F3;}
+  .pill{font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:2px 9px; border-radius:8px; white-space:nowrap;}
+  .pill.pass{background:#EAF3EC; color:var(--good); border:1px solid var(--good);}
+  .pill.fail{background:#F8ECEA; color:var(--bad); border:1px solid var(--bad);}
+  .details-row td{background:#FBF9F3; font-size:12.5px;}
+  .details-row pre{white-space:pre-wrap; word-break:break-word; margin:0; font-family:'IBM Plex Mono',monospace; font-size:12px;}
+  .toggle-link{color:var(--navy-1); text-decoration:underline; cursor:pointer; font-size:12.5px; background:none; border:none; padding:0; font-family:'Poppins',sans-serif;}
+  .empty-state{padding:40px; text-align:center; color:var(--ink-soft); background:#fff; border-radius:var(--radius); border:1px solid var(--paper-line);}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="eyebrow">Broker Support Knowledge Assessment</div>
+    <div class="title">Quiz results &middot; admin</div>
+  </div>
+  <button class="btn btn-ghost hidden" id="logoutBtn">Log out</button>
+</div>
+
+<div class="wrap">
+
+  <div class="login-card" id="loginCard">
+    <h2>Enter admin password</h2>
+    <label class="field-label">Password</label>
+    <input type="password" class="text-input" id="passwordInput" placeholder="Admin password">
+    <div class="error-msg" id="loginError">Incorrect password. Try again.</div>
+    <button class="btn btn-primary" id="loginBtn">View results</button>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="toolbar">
+      <div class="stat-row" id="statRow"></div>
+      <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
+    </div>
+    <div id="resultsContainer"></div>
+  </div>
+
+</div>
+
+<script>
+const SESSION_KEY = 'quizAdminPassword';
+
+const loginCard = document.getElementById('loginCard');
+const dashboard = document.getElementById('dashboard');
+const logoutBtn = document.getElementById('logoutBtn');
+const passwordInput = document.getElementById('passwordInput');
+const loginBtn = document.getElementById('loginBtn');
+const loginError = document.getElementById('loginError');
+const refreshBtn = document.getElementById('refreshBtn');
+const resultsContainer = document.getElementById('resultsContainer');
+const statRow = document.getElementById('statRow');
+
+function fmtTime(totalSeconds){
+  if(totalSeconds === null || totalSeconds === undefined) return '\u2013';
+  const s = Math.round(totalSeconds);
+  const m = Math.floor(s/60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2,'0')}`;
+}
+
+function fmtDate(iso){
+  if(!iso) return '\u2013';
+  const d = new Date(iso);
+  return d.toLocaleString();
+}
+
+async function loadResults(password){
+  resultsContainer.innerHTML = '<div class="empty-state">Loading results\u2026</div>';
+  try{
+    const res = await fetch('/.netlify/functions/get-results', {
+      headers: { 'x-admin-password': password }
+    });
+    if(res.status === 401){
+      sessionStorage.removeItem(SESSION_KEY);
+      showLogin(true);
+      return;
+    }
+    if(!res.ok) throw new Error('Request failed: ' + res.status);
+    const { attempts } = await res.json();
+    renderDashboard(attempts);
+  }catch(err){
+    console.error(err);
+    resultsContainer.innerHTML = '<div class="empty-state">Could not load results. Check your connection and try refreshing.</div>';
+  }
+}
+
+function renderDashboard(attempts){
+  loginCard.classList.add('hidden');
+  dashboard.classList.remove('hidden');
+  logoutBtn.classList.remove('hidden');
+
+  if(!attempts || attempts.length === 0){
+    statRow.innerHTML = '';
+    resultsContainer.innerHTML = '<div class="empty-state">No attempts recorded yet.</div>';
+    return;
+  }
+
+  const total = attempts.length;
+  const passedCount = attempts.filter(a=>a.passed).length;
+  const avgPct = Math.round((attempts.reduce((sum,a)=>sum + Number(a.percentage||0), 0) / total) * 10) / 10;
+
+  statRow.innerHTML = `
+    <div class="stat">Attempts<b>${total}</b></div>
+    <div class="stat">Passed<b>${passedCount} / ${total}</b></div>
+    <div class="stat">Average score<b>${avgPct}%</b></div>
+  `;
+
+  let html = `<table class="results">
+    <thead><tr>
+      <th>Candidate</th><th>Role</th><th>Score</th><th>Result</th><th>Time</th><th>Submitted</th><th></th>
+    </tr></thead><tbody>`;
+
+  attempts.forEach((a, idx)=>{
+    html += `<tr>
+      <td>${escapeHtml(a.candidate_name)}</td>
+      <td>${escapeHtml(a.candidate_role || '\u2013')}</td>
+      <td>${Number(a.total_score).toFixed(1)} / ${a.total_marks} (${a.percentage}%)</td>
+      <td><span class="pill ${a.passed ? 'pass':'fail'}">${a.passed ? 'Pass' : 'Fail'}</span></td>
+      <td>${fmtTime(a.elapsed_seconds)}</td>
+      <td>${fmtDate(a.submitted_at)}</td>
+      <td><button class="toggle-link" onclick="toggleDetails(${idx})">View answers</button></td>
+    </tr>
+    <tr class="details-row hidden" id="details-${idx}">
+      <td colspan="7"><pre>${escapeHtml(JSON.stringify(a.answers, null, 2))}</pre></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  resultsContainer.innerHTML = html;
+}
+
+function toggleDetails(idx){
+  document.getElementById(`details-${idx}`).classList.toggle('hidden');
+}
+
+function escapeHtml(str){
+  if(str === null || str === undefined) return '';
+  return String(str)
+    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+
+function showLogin(withError){
+  loginCard.classList.remove('hidden');
+  dashboard.classList.add('hidden');
+  logoutBtn.classList.add('hidden');
+  loginError.style.display = withError ? 'block' : 'none';
+  passwordInput.value = '';
+  passwordInput.focus();
+}
+
+loginBtn.addEventListener('click', ()=>{
+  const pw = passwordInput.value.trim();
+  if(!pw) return;
+  sessionStorage.setItem(SESSION_KEY, pw);
+  loginError.style.display = 'none';
+  loadResults(pw);
+});
+passwordInput.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') loginBtn.click();
+});
+refreshBtn.addEventListener('click', ()=>{
+  const pw = sessionStorage.getItem(SESSION_KEY);
+  if(pw) loadResults(pw);
+});
+logoutBtn.addEventListener('click', ()=>{
+  sessionStorage.removeItem(SESSION_KEY);
+  showLogin(false);
+});
+
+// Auto-login if this tab already has the password from earlier this session
+const savedPassword = sessionStorage.getItem(SESSION_KEY);
+if(savedPassword){
+  loadResults(savedPassword);
+} else {
+  showLogin(false);
+}
+</script>
+</body>
+</html>
