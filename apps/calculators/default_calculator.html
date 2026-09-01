@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Default Calculator</title>
+<style>
+  :root{
+    --navy:#16294B; --navy-2:#24406B; --ink:#1B2430; --gold:#B8902E; --gold-soft:#E9DAB4;
+    --red:#8C3A2B; --red-soft:#F3DFD8;
+    --bg:#EEF1F1; --card:#FFFFFF; --line:rgba(22,41,75,.14); --muted:#5B6572;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:36px 24px 56px;}
+  header{margin-bottom:28px;}
+  h1{
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    font-weight:600; font-size:30px; margin:0 0 6px; color:var(--navy); letter-spacing:-0.01em;
+  }
+  .sub{margin:0; color:var(--muted); font-size:15px; max-width:58ch;}
+  .grid{display:grid; grid-template-columns:300px 1fr; gap:20px;}
+  @media (max-width:760px){ .grid{grid-template-columns:1fr;} }
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:22px;}
+  .panel h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-2);
+    margin:0 0 16px; padding-bottom:10px; border-bottom:2px solid var(--gold-soft); font-weight:700;
+  }
+  .toggle{display:flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; margin-bottom:18px;}
+  .toggle button{
+    flex:1; padding:9px 8px; border:none; background:#FBFBFA; color:var(--muted);
+    font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .toggle button.active{background:var(--navy); color:#fff;}
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:14px;}
+  label span.lbl{display:block; margin-bottom:5px; font-weight:600; color:var(--ink);}
+  input{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:6px;
+    font-size:15px; font-variant-numeric:tabular-nums; background:#FBFBFA; color:var(--ink);
+  }
+  input:focus{outline:2px solid var(--navy-2); outline-offset:1px;}
+  .hint{font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:2px;}
+  .field-group{display:none;}
+  .field-group.active{display:block;}
+  .headline{
+    display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:20px;
+  }
+  .figure{
+    font-family:Georgia,"Iowan Old Style",serif; font-size:40px; font-weight:600;
+    color:var(--red); font-variant-numeric:tabular-nums; line-height:1;
+  }
+  .figure-label{color:var(--muted); font-size:14px;}
+  .breakdown{border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:18px;}
+  .row{
+    display:flex; justify-content:space-between; padding:11px 16px; font-size:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:none; background:var(--red-soft); font-weight:700; color:var(--red);}
+  .row span:first-child{color:var(--muted);}
+  .row:last-child span:first-child{color:var(--red);}
+  .row b{font-variant-numeric:tabular-nums;}
+  .note{
+    padding:14px 16px; background:#F7F8F6; border-left:3px solid var(--gold);
+    border-radius:0 6px 6px 0; font-size:12.5px; color:var(--muted); line-height:1.6;
+  }
+  .home-link{display:inline-block; margin-bottom:14px; color:var(--navy-2); font-size:13px; font-weight:600; text-decoration:none;}
+  .home-link:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home-link" href="index.html">← Back to calculators</a>
+  <header>
+    <h1>Default Calculator</h1>
+    <p class="sub">Estimate what's owed when a repayment is missed — either on a single overdue instalment, or if the full loan is accelerated after an Event of Default.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <h2>Scenario</h2>
+      <div class="toggle">
+        <button id="modeSingleBtn" class="active" onclick="setMode('single')">Single missed payment</button>
+        <button id="modeFullBtn" onclick="setMode('full')">Full loan accelerated</button>
+      </div>
+
+      <div id="modeSingle" class="field-group active">
+        <label><span class="lbl">Overdue instalment (PHP)</span><input id="overdueAmount" type="number" value="6800.44" min="0" step="0.01"></label>
+      </div>
+      <div id="modeFull" class="field-group">
+        <label><span class="lbl">Outstanding principal (PHP)</span><input id="outstandingPrincipal" type="number" value="13399.56" min="0" step="0.01"></label>
+      </div>
+
+      <label><span class="lbl">Ordinary interest rate (% p.a.)</span><input id="ordinaryRate" type="number" value="12" min="0" step="0.1"></label>
+      <label><span class="lbl">Additional default rate (% per month)</span><input id="defaultRate" type="number" value="0.5" min="0" step="0.1"></label>
+      <label><span class="lbl">Days overdue / since default</span><input id="daysLate" type="number" value="15" min="0" step="1"></label>
+      <label><span class="lbl">Recovery costs (PHP, optional)</span><input id="recoveryCosts" type="number" value="0" min="0" step="1"></label>
+      <p class="hint">Default interest = ordinary rate + additional default rate (converted to an annual rate), accrued daily on a 365-day basis. Matches clauses 8.2 and 10.2 of the standard loan agreement.</p>
+    </section>
+
+    <section class="panel">
+      <div class="headline">
+        <div>
+          <div class="figure" id="totalOwed">₱0.00</div>
+          <div class="figure-label" id="totalLabel">total now payable</div>
+        </div>
+      </div>
+      <div class="breakdown">
+        <div class="row"><span id="baseLabel">Overdue instalment</span><b id="baseAmount">₱0.00</b></div>
+        <div class="row"><span>Ordinary interest accrued</span><b id="ordinaryInterest">₱0.00</b></div>
+        <div class="row"><span>Additional default interest accrued</span><b id="defaultInterest">₱0.00</b></div>
+        <div class="row" id="recoveryRow"><span>Recovery costs</span><b id="recoveryOut">₱0.00</b></div>
+        <div class="row"><span>Total now payable</span><b id="grandTotal">₱0.00</b></div>
+      </div>
+      <div class="note" id="modeNote"></div>
+    </section>
+  </div>
+</div>
+<script>
+let mode = 'single';
+function setMode(m){
+  mode = m;
+  document.getElementById('modeSingleBtn').classList.toggle('active', m === 'single');
+  document.getElementById('modeFullBtn').classList.toggle('active', m === 'full');
+  document.getElementById('modeSingle').classList.toggle('active', m === 'single');
+  document.getElementById('modeFull').classList.toggle('active', m === 'full');
+  document.getElementById('baseLabel').textContent = m === 'single' ? 'Overdue instalment' : 'Outstanding principal';
+  document.getElementById('totalLabel').textContent = m === 'single' ? 'total now payable' : 'total accelerated payout';
+  document.getElementById('modeNote').textContent = m === 'single'
+    ? 'Single missed payment: interest is calculated only on the overdue instalment amount, for the number of days it has been late. Clause 9(a) allows five Business Days after written notice to remedy a missed payment before it becomes an Event of Default.'
+    : 'Full loan accelerated: under clause 10.2, once an Event of Default is not remedied within the applicable cure period, the Lender may call in the entire outstanding principal plus accrued interest and reasonable recovery costs — this mode estimates that total payout.';
+  recalc();
+}
+function money(n){
+  return '₱' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function recalc(){
+  const base = mode === 'single'
+    ? (parseFloat(document.getElementById('overdueAmount').value) || 0)
+    : (parseFloat(document.getElementById('outstandingPrincipal').value) || 0);
+  const ordinaryAnnual = (parseFloat(document.getElementById('ordinaryRate').value) || 0) / 100;
+  const defaultMonthly = (parseFloat(document.getElementById('defaultRate').value) || 0) / 100;
+  const defaultAnnual = defaultMonthly * 12;
+  const days = Math.max(0, parseFloat(document.getElementById('daysLate').value) || 0);
+  const recovery = Math.max(0, parseFloat(document.getElementById('recoveryCosts').value) || 0);
+
+  const ordinaryInterest = base * (ordinaryAnnual / 365) * days;
+  const defaultInterest = base * (defaultAnnual / 365) * days;
+  const total = base + ordinaryInterest + defaultInterest + recovery;
+
+  document.getElementById('baseAmount').textContent = money(base);
+  document.getElementById('ordinaryInterest').textContent = money(ordinaryInterest);
+  document.getElementById('defaultInterest').textContent = money(defaultInterest);
+  document.getElementById('recoveryOut').textContent = money(recovery);
+  document.getElementById('grandTotal').textContent = money(total);
+  document.getElementById('totalOwed').textContent = money(total);
+}
+['overdueAmount','outstandingPrincipal','ordinaryRate','defaultRate','daysLate','recoveryCosts']
+  .forEach(id => document.getElementById(id).addEventListener('input', recalc));
+recalc();
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loan Calculators</title>
+<style>
+  :root{--navy:#16294B;--navy-2:#24406B;--ink:#1B2430;--gold:#B8902E;--gold-soft:#E9DAB4;--bg:#EEF1F1;--card:#fff;--line:rgba(22,41,75,.14);--muted:#5B6572;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:56px 24px;}
+  header{margin-bottom:30px;}
+  h1{font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;font-weight:600;font-size:34px;margin:0 0 8px;color:var(--navy);}
+  .sub{margin:0;color:var(--muted);font-size:15px;max-width:58ch;line-height:1.6;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .card{display:flex;flex-direction:column;align-items:flex-start;min-height:210px;padding:22px;background:var(--card);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink);box-shadow:0 3px 12px rgba(22,41,75,.05);transition:transform .15s,box-shadow .15s;}
+  .card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(22,41,75,.12);}
+  .icon{font-size:25px;color:var(--gold);margin-bottom:22px;}
+  h2{font-size:17px;color:var(--navy);margin:0 0 8px;}
+  .card p{font-size:13px;color:var(--muted);line-height:1.5;margin:0;}
+  .open{margin-top:auto;padding-top:18px;font-size:13px;font-weight:700;color:var(--navy-2);}
+  @media(max-width:760px){.grid{grid-template-columns:1fr;}.card{min-height:0;}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Loan Calculators</h1>
+    <p class="sub">Choose a calculator to estimate repayments, calculate default amounts, or build a print-ready repayment schedule.</p>
+  </header>
+  <section class="grid" aria-label="Available calculators">
+    <a class="card" href="default_calculator.html">
+      <div class="icon" aria-hidden="true">◈</div>
+      <h2>Default Calculator</h2>
+      <p>Estimate what is owed after a missed repayment or an accelerated loan.</p>
+      <span class="open">Open calculator →</span>
+    </a>
+    <a class="card" href="loan_and_amortisation_calculator.html">
+      <div class="icon" aria-hidden="true">▣</div>
+      <h2>Loan &amp; Amortisation</h2>
+      <p>Calculate reducing-balance monthly repayments and the full amortisation schedule.</p>
+      <span class="open">Open calculator →</span>
+    </a>
+    <a class="card" href="repayment_schedule_builder.html">
+      <div class="icon" aria-hidden="true">▤</div>
+      <h2>Repayment Schedule Builder</h2>
+      <p>Generate a dated, print-ready repayment schedule for a loan agreement.</p>
+      <span class="open">Open calculator →</span>
+    </a>
+  </section>
+</main>
+</body>
+</html>

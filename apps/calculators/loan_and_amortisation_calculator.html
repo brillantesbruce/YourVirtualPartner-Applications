@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loan &amp; Amortisation Calculator</title>
+<style>
+  :root{
+    --navy:#16294B; --navy-2:#24406B; --ink:#1B2430; --gold:#B8902E; --gold-soft:#E9DAB4;
+    --bg:#EEF1F1; --card:#FFFFFF; --line:rgba(22,41,75,.14); --muted:#5B6572;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px; margin:0 auto; padding:36px 24px 56px;}
+  header{margin-bottom:28px;}
+  h1{
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    font-weight:600; font-size:30px; margin:0 0 6px; color:var(--navy);
+    letter-spacing:-0.01em;
+  }
+  .sub{margin:0; color:var(--muted); font-size:15px; max-width:52ch;}
+  .grid{display:grid; grid-template-columns:300px 1fr; gap:20px;}
+  @media (max-width:760px){ .grid{grid-template-columns:1fr;} }
+  .panel{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:22px;
+  }
+  .panel h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-2);
+    margin:0 0 16px; padding-bottom:10px; border-bottom:2px solid var(--gold-soft);
+    font-weight:700;
+  }
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:14px;}
+  label span.lbl{display:block; margin-bottom:5px; font-weight:600; color:var(--ink);}
+  input{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:6px;
+    font-size:15px; font-variant-numeric:tabular-nums; background:#FBFBFA; color:var(--ink);
+  }
+  input:focus{outline:2px solid var(--navy-2); outline-offset:1px;}
+  .hint{font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:6px;}
+  .headline{
+    display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:20px;
+  }
+  .figure{
+    font-family:Georgia,"Iowan Old Style",serif; font-size:44px; font-weight:600;
+    color:var(--navy); font-variant-numeric:tabular-nums; line-height:1;
+  }
+  .figure-label{color:var(--muted); font-size:14px;}
+  .stat-row{display:flex; gap:28px; flex-wrap:wrap; margin-bottom:22px;}
+  .stat span{
+    display:block; font-size:19px; font-weight:700; color:var(--navy-2);
+    font-variant-numeric:tabular-nums;
+  }
+  .stat label{font-size:12.5px; color:var(--muted); margin:0;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  thead th{
+    background:var(--navy); color:#fff; text-align:right; padding:9px 10px;
+    font-weight:600; font-size:12px;
+  }
+  thead th:first-child, thead th:nth-child(2){text-align:left;}
+  tbody td{
+    padding:8px 10px; text-align:right; border-bottom:1px solid var(--line);
+    font-variant-numeric:tabular-nums;
+  }
+  tbody td:first-child, tbody td:nth-child(2){text-align:left;}
+  tbody tr:nth-child(even){background:#F7F8F6;}
+  tbody tr:last-child td{font-weight:700; color:var(--navy);}
+  .scroll{max-height:420px; overflow:auto; border:1px solid var(--line); border-radius:8px;}
+  .formula{
+    margin-top:18px; padding:14px 16px; background:#F7F8F6; border-left:3px solid var(--gold);
+    border-radius:0 6px 6px 0; font-size:12.5px; color:var(--muted); line-height:1.6;
+  }
+  .home-link{display:inline-block; margin-bottom:14px; color:var(--navy-2); font-size:13px; font-weight:600; text-decoration:none;}
+  .home-link:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home-link" href="index.html">← Back to calculators</a>
+  <header>
+    <h1>Loan &amp; Amortisation Calculator</h1>
+    <p class="sub">Reducing-balance amortisation for a PHP-denominated loan — set the principal, rate and term to see the monthly repayment and full schedule.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <h2>Loan details</h2>
+      <label><span class="lbl">Principal (PHP)</span><input id="principal" type="number" value="20000" min="0" step="100"></label>
+      <label><span class="lbl">Interest rate (% p.a.)</span><input id="rate" type="number" value="12" min="0" step="0.1"></label>
+      <label><span class="lbl">Term (months)</span><input id="term" type="number" value="12" min="1" max="120" step="1"></label>
+      <label><span class="lbl">Disbursement date (optional)</span><input id="disb" type="date"></label>
+      <p class="hint">Interest accrues on the outstanding balance at rate ÷ 12 per month, not as flat interest on the original principal — this matches the reducing-balance method used in the standard loan agreement.</p>
+    </section>
+    <section class="panel">
+      <div class="headline">
+        <div>
+          <div class="figure" id="payment">₱0.00</div>
+          <div class="figure-label">indicative monthly repayment</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><span id="totalInterest">₱0.00</span><label>Total interest</label></div>
+        <div class="stat"><span id="totalRepayable">₱0.00</span><label>Total repayable</label></div>
+        <div class="stat"><span id="maturity">Month N</span><label>Maturity</label></div>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Mth</th><th>Date</th><th>Opening</th><th>Interest</th><th>Principal</th><th>Repayment</th><th>Closing</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="formula">
+        Monthly repayment = Principal × monthly rate ÷ [1 − (1 + monthly rate)<sup>−n</sup>], where monthly rate = annual rate ÷ 12 and n = term in months. The final instalment is adjusted so the closing balance reaches exactly ₱0.00.
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+function money(n){
+  return '₱' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function addMonthsClamped(date, n){
+  const d = new Date(date.getTime());
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  d.setDate(Math.min(day, daysInMonth));
+  return d;
+}
+function fmtDate(d){
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+function recalc(){
+  const P = parseFloat(document.getElementById('principal').value) || 0;
+  const annual = (parseFloat(document.getElementById('rate').value) || 0) / 100;
+  const n = Math.max(1, parseInt(document.getElementById('term').value) || 1);
+  const disbVal = document.getElementById('disb').value;
+  const monthlyRate = annual / 12;
+
+  let payment;
+  if (monthlyRate === 0) {
+    payment = P / n;
+  } else {
+    payment = P * monthlyRate / (1 - Math.pow(1 + monthlyRate, -n));
+  }
+
+  let balance = P;
+  let disbDate = disbVal ? new Date(disbVal + 'T00:00:00') : null;
+  const rowsEl = document.getElementById('rows');
+  rowsEl.innerHTML = '';
+  let totalPaid = 0;
+  let lastDate = null;
+
+  for (let i = 1; i <= n; i++) {
+    const interest = balance * monthlyRate;
+    let principal = payment - interest;
+    let pay = payment;
+    let closing = balance - principal;
+    if (i === n) { principal = balance; pay = principal + interest; closing = 0; }
+    totalPaid += pay;
+
+    let dateLabel = 'Month ' + i;
+    if (disbDate) {
+      const d = addMonthsClamped(disbDate, i);
+      dateLabel = fmtDate(d);
+      lastDate = d;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + i + '</td><td>' + dateLabel + '</td><td>' + money(balance) + '</td><td>' +
+      money(interest) + '</td><td>' + money(principal) + '</td><td>' + money(pay) + '</td><td>' + money(closing) + '</td>';
+    rowsEl.appendChild(tr);
+    balance = closing;
+  }
+
+  document.getElementById('payment').textContent = money(payment);
+  document.getElementById('totalInterest').textContent = money(totalPaid - P);
+  document.getElementById('totalRepayable').textContent = money(totalPaid);
+  document.getElementById('maturity').textContent = lastDate ? fmtDate(lastDate) : ('Month ' + n);
+}
+['principal','rate','term','disb'].forEach(id => document.getElementById(id).addEventListener('input', recalc));
+recalc();
+</script>
+</body>
+</html>

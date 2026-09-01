@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import {
   Clock, CheckCircle2, XCircle, Trophy, Users, LayoutGrid, ClipboardList,
   ArrowLeft, RotateCcw, AlertCircle, FileText, ChevronRight, Circle, CheckCircle,
@@ -562,7 +563,7 @@ function CaseForm({ activeCase, formData, setFormData, onSubmit }) {
   );
 }
 
-function ResultView({ activeCase, result, onRetry, onBack }) {
+function ResultView({ activeCase, result, saveError, onRetry, onBack }) {
   const grouped = {};
   result.fieldResults.forEach((r) => {
     const t = FIELD_TAB_TITLE[r.id] || "Other";
@@ -613,6 +614,11 @@ function ResultView({ activeCase, result, onRetry, onBack }) {
       <button onClick={onRetry} style={{ display: "flex", alignItems: "center", gap: 6, background: C.gold, color: "white", border: "none", borderRadius: 45, padding: "10px 22px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
         <RotateCcw size={14} /> Try another case
       </button>
+      {saveError && (
+        <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8, background: C.errorBg, color: C.error, fontSize: 12.5 }}>
+          {saveError}
+        </div>
+      )}
     </div>
   );
 }
@@ -639,7 +645,7 @@ function PipelineView() {
   );
 }
 
-function LeaderboardView({ attempts, loading }) {
+function LeaderboardView({ attempts, loading, error }) {
   const sorted = [...attempts].sort((a, b) => b.accuracyPct - a.accuracyPct || a.timeSeconds - b.timeSeconds).slice(0, 25);
   return (
     <div style={{ padding: 26 }} className="fade-in">
@@ -650,7 +656,9 @@ function LeaderboardView({ attempts, loading }) {
       <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: C.sub, marginBottom: 18 }}>
         <AlertCircle size={13} /> Visible to anyone using this training tool.
       </div>
-      {loading ? (
+      {error ? (
+        <div style={{ fontSize: 13, color: C.error }}>{error}</div>
+      ) : loading ? (
         <div style={{ fontSize: 13, color: C.sub }}>Loading results…</div>
       ) : sorted.length === 0 ? (
         <div style={{ fontSize: 13, color: C.sub }}>No attempts submitted yet — be the first.</div>
@@ -685,14 +693,40 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [attempts, setAttempts] = useState([]);
   const [loadingBoard, setLoadingBoard] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState("");
+  const [saveError, setSaveError] = useState("");
   const intervalRef = useRef(null);
 
   const loadLeaderboard = useCallback(async () => {
     setLoadingBoard(true);
-    try {
-      const stored = window.localStorage.getItem("leaderboard-attempts");
-      setAttempts(stored ? JSON.parse(stored) : []);
-    } catch (e) { setAttempts([]); }
+    setLeaderboardError("");
+    if (!supabaseConfigured) {
+      setAttempts([]);
+      setLeaderboardError("The shared leaderboard is not configured yet.");
+      setLoadingBoard(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("leaderboard_attempts")
+      .select("trainee_name, case_id, case_title, accuracy_pct, time_seconds, submitted_at")
+      .order("accuracy_pct", { ascending: false })
+      .order("time_seconds", { ascending: true })
+      .limit(200);
+
+    if (error) {
+      setAttempts([]);
+      setLeaderboardError("Could not load the shared leaderboard. Please try again.");
+    } else {
+      setAttempts(data.map((attempt) => ({
+        trainee: attempt.trainee_name,
+        caseId: attempt.case_id,
+        caseTitle: attempt.case_title,
+        accuracyPct: attempt.accuracy_pct,
+        timeSeconds: Number(attempt.time_seconds),
+        timestamp: attempt.submitted_at,
+      })));
+    }
     setLoadingBoard(false);
   }, []);
 
@@ -732,26 +766,31 @@ export default function App() {
     const res = { fieldResults, correctCount, accuracyPct, timeSeconds };
     setResult(res);
 
-    const record = { trainee: trainee.trim() || "Anonymous", caseTitle: activeCase.title, accuracyPct, timeSeconds, timestamp: Date.now() };
-    try {
-      let existing = [];
-      try {
-        const stored = window.localStorage.getItem("leaderboard-attempts");
-        existing = stored ? JSON.parse(stored) : [];
-      } catch (e) { existing = []; }
-      existing.push(record);
-      if (existing.length > 200) existing = existing.slice(-200);
-      window.localStorage.setItem("leaderboard-attempts", JSON.stringify(existing));
-    } catch (e) { console.error("Failed to save attempt", e); }
+    setSaveError("");
+    if (!supabaseConfigured) {
+      setSaveError("This result was scored locally, but the shared leaderboard is not configured.");
+      return;
+    }
+
+    const { error } = await supabase.from("leaderboard_attempts").insert({
+      trainee_name: trainee.trim() || "Anonymous",
+      case_id: activeCase.id,
+      case_title: activeCase.title,
+      accuracy_pct: accuracyPct,
+      time_seconds: Number(timeSeconds.toFixed(2)),
+    });
+    if (error) {
+      setSaveError("This result was scored, but it could not be added to the shared leaderboard.");
+    }
   };
 
   const backToCases = () => { setActiveCase(null); setResult(null); };
 
   let body;
   if (view === "pipeline") body = <PipelineView />;
-  else if (view === "leaderboard") body = <LeaderboardView attempts={attempts} loading={loadingBoard} />;
+  else if (view === "leaderboard") body = <LeaderboardView attempts={attempts} loading={loadingBoard} error={leaderboardError} />;
   else if (!activeCase) body = <CaseSelect onPick={pickCase} />;
-  else if (result) body = <ResultView activeCase={activeCase} result={result} onRetry={backToCases} onBack={backToCases} />;
+  else if (result) body = <ResultView activeCase={activeCase} result={result} saveError={saveError} onRetry={backToCases} onBack={backToCases} />;
   else body = <CaseForm key={activeCase.id} activeCase={activeCase} formData={formData} setFormData={setFormData} onSubmit={submit} />;
 
   return (

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repayment Schedule Builder</title>
+<style>
+  :root{
+    --navy:#16294B; --navy-2:#24406B; --ink:#1B2430; --gold:#B8902E; --gold-soft:#E9DAB4;
+    --bg:#EEF1F1; --card:#FFFFFF; --line:rgba(22,41,75,.14); --muted:#5B6572;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:980px; margin:0 auto; padding:36px 24px 56px;}
+  header{margin-bottom:28px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap;}
+  h1{
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    font-weight:600; font-size:28px; margin:0 0 6px; color:var(--navy); letter-spacing:-0.01em;
+  }
+  .sub{margin:0; color:var(--muted); font-size:15px; max-width:56ch;}
+  button.print{
+    background:var(--navy); color:#fff; border:none; padding:10px 18px; border-radius:6px;
+    font-size:14px; font-weight:600; cursor:pointer;
+  }
+  button.print:hover{background:var(--navy-2);}
+  .grid{display:grid; grid-template-columns:300px 1fr; gap:20px;}
+  @media (max-width:800px){ .grid{grid-template-columns:1fr;} }
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:22px;}
+  .panel h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-2);
+    margin:0 0 16px; padding-bottom:10px; border-bottom:2px solid var(--gold-soft); font-weight:700;
+  }
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:13px;}
+  label span.lbl{display:block; margin-bottom:5px; font-weight:600; color:var(--ink);}
+  input{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:6px;
+    font-size:14.5px; font-variant-numeric:tabular-nums; background:#FBFBFA; color:var(--ink);
+  }
+  input:focus{outline:2px solid var(--navy-2); outline-offset:1px;}
+  .doc{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:28px;}
+  .doc-head{border-bottom:2px solid var(--gold-soft); padding-bottom:16px; margin-bottom:16px;}
+  .doc-title{
+    font-family:Georgia,"Iowan Old Style",serif; font-weight:600; font-size:20px; color:var(--navy);
+    margin:0 0 4px;
+  }
+  .doc-parties{font-size:13.5px; color:var(--muted); margin:0;}
+  .doc-parties b{color:var(--ink); font-weight:600;}
+  .facts{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
+  @media (max-width:640px){ .facts{grid-template-columns:repeat(2,1fr);} }
+  .fact span{display:block; font-size:12px; color:var(--muted); margin-bottom:3px;}
+  .fact b{font-size:16px; font-variant-numeric:tabular-nums; color:var(--navy);}
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  thead th{background:var(--navy); color:#fff; text-align:right; padding:9px 10px; font-weight:600; font-size:12px;}
+  thead th:first-child, thead th:nth-child(2){text-align:left;}
+  tbody td{padding:8px 10px; text-align:right; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums;}
+  tbody td:first-child, tbody td:nth-child(2){text-align:left;}
+  tbody tr:nth-child(even){background:#F7F8F6;}
+  tbody tr:last-child td{font-weight:700; color:var(--navy);}
+  .note{font-size:12.5px; color:var(--muted); margin-top:14px; line-height:1.6;}
+  .home-link{display:inline-block; margin-bottom:14px; color:var(--navy-2); font-size:13px; font-weight:600; text-decoration:none;}
+  .home-link:hover{text-decoration:underline;}
+  @media print{
+    body{background:#fff;}
+    .grid{display:block;}
+    .panel:first-child, button.print, .sub, .home-link{display:none;}
+    .doc{border:none; padding:0;}
+    header{margin-bottom:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home-link" href="index.html">← Back to calculators</a>
+  <header>
+    <div>
+      <h1>Repayment Schedule Builder</h1>
+      <p class="sub">Fill in the loan details to generate a print-ready Schedule 1, with real calendar dates, to attach to the signed agreement.</p>
+    </div>
+    <button class="print" onclick="window.print()">Print schedule</button>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <h2>Loan details</h2>
+      <label><span class="lbl">Lender</span><input id="lender" type="text" value="Your Virtual Partner"></label>
+      <label><span class="lbl">Borrower</span><input id="borrower" type="text" value="Antonette Silario"></label>
+      <label><span class="lbl">Principal (PHP)</span><input id="principal" type="number" value="20000" min="0" step="100"></label>
+      <label><span class="lbl">Interest rate (% p.a.)</span><input id="rate" type="number" value="12" min="0" step="0.1"></label>
+      <label><span class="lbl">Term (months)</span><input id="term" type="number" value="3" min="1" max="120" step="1"></label>
+      <label><span class="lbl">First repayment date</span><input id="firstDate" type="date"></label>
+    </section>
+    <section class="doc">
+      <div class="doc-head">
+        <p class="doc-title">Schedule 1 — Repayment Schedule</p>
+        <p class="doc-parties"><b id="outLender">Your Virtual Partner</b> and <b id="outBorrower">Antonette Silario</b></p>
+      </div>
+      <div class="facts">
+        <div class="fact"><span>Principal</span><b id="factPrincipal">₱0.00</b></div>
+        <div class="fact"><span>Rate</span><b id="factRate">0% p.a.</b></div>
+        <div class="fact"><span>Term</span><b id="factTerm">0 months</b></div>
+        <div class="fact"><span>Monthly repayment</span><b id="factPayment">₱0.00</b></div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Mth</th><th>Payment Date</th><th>Opening</th><th>Interest</th><th>Principal</th><th>Repayment</th><th>Closing</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="note" id="summaryNote"></p>
+      <p class="note">Interest is calculated on the reducing balance at 1/12 of the annual rate per month, not as flat interest on the original principal. The final instalment is adjusted so the closing balance reaches exactly ₱0.00. Set a first repayment date to fill in real calendar dates — each later date rolls forward one calendar month, clamped to the last day of a shorter month.</p>
+    </section>
+  </div>
+</div>
+<script>
+function money(n){
+  return '₱' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function addMonthsClamped(date, n){
+  const d = new Date(date.getTime());
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  d.setDate(Math.min(day, daysInMonth));
+  return d;
+}
+function fmtDate(d){
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+function recalc(){
+  const lender = document.getElementById('lender').value || 'Lender';
+  const borrower = document.getElementById('borrower').value || 'Borrower';
+  const P = parseFloat(document.getElementById('principal').value) || 0;
+  const annualPct = parseFloat(document.getElementById('rate').value) || 0;
+  const annual = annualPct / 100;
+  const n = Math.max(1, parseInt(document.getElementById('term').value) || 1);
+  const firstVal = document.getElementById('firstDate').value;
+  const monthlyRate = annual / 12;
+
+  document.getElementById('outLender').textContent = lender;
+  document.getElementById('outBorrower').textContent = borrower;
+
+  let payment = monthlyRate === 0 ? P / n : P * monthlyRate / (1 - Math.pow(1 + monthlyRate, -n));
+
+  let balance = P;
+  let firstDate = firstVal ? new Date(firstVal + 'T00:00:00') : null;
+  const rowsEl = document.getElementById('rows');
+  rowsEl.innerHTML = '';
+  let totalPaid = 0;
+  let lastDate = null;
+
+  for (let i = 1; i <= n; i++) {
+    const interest = balance * monthlyRate;
+    let principal = payment - interest;
+    let pay = payment;
+    let closing = balance - principal;
+    if (i === n) { principal = balance; pay = principal + interest; closing = 0; }
+    totalPaid += pay;
+
+    let dateLabel = '[to be inserted]';
+    if (firstDate) {
+      const d = addMonthsClamped(firstDate, i - 1);
+      dateLabel = fmtDate(d);
+      lastDate = d;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + i + '</td><td>' + dateLabel + '</td><td>' + money(balance) + '</td><td>' +
+      money(interest) + '</td><td>' + money(principal) + '</td><td>' + money(pay) + '</td><td>' + money(closing) + '</td>';
+    rowsEl.appendChild(tr);
+    balance = closing;
+  }
+
+  document.getElementById('factPrincipal').textContent = money(P);
+  document.getElementById('factRate').textContent = annualPct.toFixed(2).replace(/\.00$/,'') + '% p.a.';
+  document.getElementById('factTerm').textContent = n + (n === 1 ? ' month' : ' months');
+  document.getElementById('factPayment').textContent = money(payment);
+
+  const maturity = lastDate ? fmtDate(lastDate) : ('Month ' + n);
+  document.getElementById('summaryNote').textContent =
+    'Total interest: ' + money(totalPaid - P) + '.  Total repayable: ' + money(totalPaid) + '.  Maturity Date: ' + maturity + '.';
+}
+['lender','borrower','principal','rate','term','firstDate'].forEach(id => document.getElementById(id).addEventListener('input', recalc));
+recalc();
+</script>
+</body>
+</html>
