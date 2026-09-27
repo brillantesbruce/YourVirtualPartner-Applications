@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bookkeeping Technical Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #172439;
+    --ink-soft: #4A5568;
+    --paper: #FAF8F3;
+    --paper-raised: #FFFFFF;
+    --hairline: #DEDACE;
+    --accent: #3B6E8F;
+    --accent-soft: #EAF1F5;
+    --amber: #B8752E;
+    --amber-soft: #FBF0E1;
+    --red: #A6362F;
+    --red-soft: #FAE9E7;
+    --green: #3F7A5C;
+    --green-soft: #E8F3ED;
+    --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #ECE7DC;
+      --ink-soft: #ABA79C;
+      --paper: #14181F;
+      --paper-raised: #1C222B;
+      --hairline: #313844;
+      --accent: #7EB1CE;
+      --accent-soft: #1E2E38;
+      --amber: #E0A059;
+      --amber-soft: #33291A;
+      --red: #E08079;
+      --red-soft: #3A2222;
+      --green: #7FC29E;
+      --green-soft: #1C2E26;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #ECE7DC;
+    --ink-soft: #ABA79C;
+    --paper: #14181F;
+    --paper-raised: #1C222B;
+    --hairline: #313844;
+    --accent: #7EB1CE;
+    --accent-soft: #1E2E38;
+    --amber: #E0A059;
+    --amber-soft: #33291A;
+    --red: #E08079;
+    --red-soft: #3A2222;
+    --green: #7FC29E;
+    --green-soft: #1C2E26;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+  #app {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 64px;
+  }
+
+  .shell {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  /* ---------- Start screen ---------- */
+  .start-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 44px 40px;
+    margin-top: 6vh;
+  }
+  .kicker {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1.title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .subtitle {
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+  }
+  .meta-row {
+    display: flex;
+    gap: 28px;
+    padding: 18px 0;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 26px;
+    flex-wrap: wrap;
+  }
+  .meta-item .meta-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .meta-item .meta-value {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .field-label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+  }
+  input[type="text"] {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 16px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--hairline);
+    background: var(--paper);
+    color: var(--ink);
+    margin-bottom: 22px;
+  }
+  input[type="text"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .instructions {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 28px;
+    padding-left: 18px;
+  }
+  .instructions li { margin-bottom: 6px; }
+
+  button.primary {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--paper-raised);
+    background: var(--ink);
+    border: none;
+    border-radius: 4px;
+    padding: 14px 24px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s ease;
+  }
+  button.primary:hover { opacity: 0.85; }
+  button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  button.ghost {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 12px 22px;
+    cursor: pointer;
+  }
+  button.ghost:hover { background: var(--accent-soft); }
+  button.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Question screen ---------- */
+  .q-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .q-progress {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  .timer {
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    min-width: 46px;
+    text-align: right;
+  }
+  .timer.warn { color: var(--amber); }
+  .timer.danger { color: var(--red); }
+
+  .progress-track {
+    height: 3px;
+    background: var(--hairline);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 30px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 1s linear;
+  }
+  .progress-fill.warn { background: var(--amber); }
+  .progress-fill.danger { background: var(--red); }
+
+  .q-topic {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--accent);
+    margin: 0 0 6px;
+  }
+  h2.q-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 26px;
+    line-height: 1.25;
+    margin: 0 0 18px;
+  }
+  .q-body p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+  .q-quote {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--hairline);
+    padding-left: 16px;
+    margin: 14px 0 18px;
+  }
+  .q-block {
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 10px 0 18px;
+    font-size: 14px;
+  }
+  .q-block-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+  }
+  .q-block-row.head { font-weight: 700; border-bottom: 1px solid var(--hairline); margin-bottom: 3px; padding-bottom: 6px; }
+
+  .q-prompt {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 6px 0 16px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    text-align: left;
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 5px;
+    padding: 15px 16px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .option:hover { border-color: var(--accent); }
+  .option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .option.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .option .letter {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 18px;
+  }
+  .option:disabled { cursor: default; }
+
+  .q-footer-note {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-top: 22px;
+  }
+
+  /* ---------- Interstitial (between questions) ---------- */
+  .interstitial {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+
+  /* ---------- Thank-you screen ---------- */
+  .center-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 52px 40px;
+    margin-top: 10vh;
+    text-align: center;
+  }
+  .center-card h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 28px;
+    margin: 0 0 12px;
+  }
+  .center-card p { color: var(--ink-soft); font-size: 15px; line-height: 1.6; margin: 0 0 30px; }
+
+  /* ---------- Results screen ---------- */
+  .results-header { margin-bottom: 24px; }
+  .results-header .kicker { margin-bottom: 6px; }
+  .score-banner {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 26px 28px;
+    margin-bottom: 22px;
+  }
+  .score-num {
+    font-family: var(--serif);
+    font-size: 46px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .score-outof { font-size: 15px; color: var(--ink-soft); }
+  .score-badge {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 7px 14px;
+    border-radius: 999px;
+  }
+  .badge-strong { background: var(--green-soft); color: var(--green); }
+  .badge-pass { background: var(--green-soft); color: var(--green); }
+  .badge-borderline { background: var(--amber-soft); color: var(--amber); }
+  .badge-notpass { background: var(--red-soft); color: var(--red); }
+
+  .results-note {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin-bottom: 28px;
+    padding: 14px 16px;
+    background: var(--accent-soft);
+    border-radius: 5px;
+  }
+
+  table.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+    font-size: 13.5px;
+  }
+  table.results-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    padding: 0 8px 8px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  table.results-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--hairline);
+    vertical-align: top;
+  }
+  table.results-table td.topic-cell { color: var(--ink-soft); }
+  .verdict { font-weight: 700; }
+  .verdict.correct { color: var(--green); }
+  .verdict.incorrect { color: var(--red); }
+  .verdict.skipped { color: var(--ink-soft); }
+
+  .results-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  @media (max-width: 480px) {
+    .start-card, .center-card { padding: 32px 24px; }
+    h1.title { font-size: 27px; }
+    h2.q-title { font-size: 21px; }
+    .meta-row { gap: 18px; }
+    table.results-table { font-size: 12.5px; }
+    .score-num { font-size: 36px; }
+  }
+
+  @media print {
+    button, .results-actions { display: none !important; }
+    body { background: #fff; color: #000; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var QUESTIONS = [
+    { num: 1, topic: "GST & BAS",
+      body: ["A GST-registered business sells a hamper containing GST-free food ($150) and taxable wine ($220 GST-inclusive)."],
+      prompt: "What is the total GST payable on the sale?",
+      options: ["$20.00", "$22.00", "$37.00", "$15.00"],
+      correct: 0 },
+    { num: 2, topic: "GST & BAS",
+      body: ["A business accounts for GST on a cash basis. It issues an invoice in June for $11,000 (GST-inclusive) but the customer pays in August."],
+      prompt: "In which BAS period is the GST reported?",
+      options: ["June quarter", "August quarter", "September quarter", "Split across both"],
+      correct: 2 },
+    { num: 3, topic: "GST & BAS",
+      body: ["A company buys a car for $44,000 (GST-inclusive) used 100% for business. It is a car (not a commercial vehicle)."],
+      prompt: "What GST credit can it claim?",
+      options: ["$4,000", "$44,000 \u00D7 1/11 = $4,000", "Maximum $5,000 GST credit (car limit applies)", "No GST credit"],
+      correct: 2 },
+    { num: 4, topic: "GST & BAS",
+      body: ["On a BAS: G1 = $220,000, 1A = $20,000, 1B = $13,000, PAYG withholding = $8,500, PAYG instalment = $2,000."],
+      prompt: "What is the total amount payable on the BAS?",
+      options: ["$16,500", "$7,000", "$14,500", "$10,500"],
+      correct: 0 },
+    { num: 5, topic: "STP",
+      body: ["An employee is paid $2,500 gross, $600 PAYG withheld, $275 super, $100 salary sacrifice to super."],
+      prompt: "Under STP Phase 2, the gross amount reported should be:",
+      options: ["$2,500", "$2,400", "$2,225", "$2,600"],
+      correct: 0 },
+    { num: 6, topic: "STP",
+      body: ["A business pays a contractor who provides an ABN."],
+      prompt: "Under STP:",
+      options: ["The contractor must be reported through STP", "The contractor is NOT reported through STP (reported via TPAR)", "The contractor is reported as an employee", "Only if paid over $75,000"],
+      correct: 1 },
+    { num: 7, topic: "STP",
+      body: [],
+      prompt: "Under STP Phase 2, disaggregation of gross requires reporting of:",
+      options: ["Only gross and tax", "Gross split into salary, allowances, overtime, bonuses, etc.", "Net pay only", "Super only"],
+      correct: 1 },
+    { num: 8, topic: "AP & AR",
+      body: ["A supplier invoice is received for $8,800 (GST-inclusive) but the PO was for $8,000. The discrepancy is a pricing error."],
+      prompt: "The correct action is:",
+      options: ["Pay the invoice as-is", "Raise a discrepancy note and request a credit note", "Part-pay the invoice", "Ignore the PO"],
+      correct: 1 },
+    { num: 9, topic: "AP & AR",
+      body: ["A customer is offered a 2% discount for payment within 10 days on a $5,500 (GST-inclusive) invoice."],
+      prompt: "If paid within the discount period, the journal entry is:",
+      options: ["Debit Bank $5,390; Debit Discount $110; Credit AR $5,500", "Debit Bank $5,500; Credit AR $5,500", "Debit Bank $5,390; Debit Discount $100; Debit GST $10; Credit AR $5,500", "Debit Bank $5,390; Credit AR $5,390"],
+      correct: 2 },
+    { num: 10, topic: "AP & AR",
+      body: ["AR aging: Current $50,000 (1%), 30 days $20,000 (3%), 60 days $10,000 (5%), 90+ days $5,000 (10%)."],
+      prompt: "Doubtful debt provision?",
+      options: ["$1,800", "$2,100", "$1,600", "$850"],
+      correct: 1 },
+    { num: 11, topic: "Bank Reconciliation",
+      body: ["Bank statement balance $25,000. Outstanding deposits $4,000. Unpresented cheques $6,500. Bank error (deposit credited twice) $1,000. Cash book balance $20,500."],
+      prompt: "What is the adjusted bank balance?",
+      options: ["$22,500", "$23,500", "$21,500", "$22,000"],
+      correct: 2 },
+    { num: 12, topic: "Bank Reconciliation",
+      body: ["A direct debit for insurance of $880 appears on the bank statement but not in the cash book."],
+      prompt: "The correcting entry is:",
+      options: ["Debit Insurance $880; Credit Bank $880", "Debit Bank $880; Credit Insurance $880", "Debit Insurance $800; Debit GST $80; Credit Bank $880", "No entry needed"],
+      correct: 2 },
+    { num: 13, topic: "Bank Reconciliation",
+      body: ["A cheque for $1,500 was recorded in the cash book as $150. The bank statement shows $1,500."],
+      prompt: "To reconcile, you must:",
+      options: ["Add $1,350 to the cash book", "Deduct $1,350 from the cash book", "Add $1,350 to the bank statement", "Deduct $1,350 from the bank statement"],
+      correct: 0 },
+    { num: 14, topic: "Financial Statements",
+      body: ["Cash $10,000; AR $15,000; Inventory $20,000; Equipment $50,000; Accumulated depreciation $10,000; AP $12,000; Bank loan (due in 3 years) $30,000."],
+      prompt: "What is owner's equity?",
+      options: ["$43,000", "$45,000", "$33,000", "$53,000"],
+      correct: 0 },
+    { num: 15, topic: "Financial Statements",
+      body: ["Net profit $80,000. Depreciation $10,000. Increase in AR $5,000. Decrease in AP $3,000."],
+      prompt: "Cash flow from operations (simplified)?",
+      options: ["$82,000", "$98,000", "$88,000", "$78,000"],
+      correct: 0 },
+    { num: 16, topic: "Financial Statements",
+      body: ["A business has a current ratio of 0.8."],
+      prompt: "This means:",
+      options: ["It can easily pay short-term debts", "It may struggle to pay short-term debts", "It has too much cash", "It is highly profitable"],
+      correct: 1 },
+    { num: 17, topic: "Prepayments & Accruals",
+      body: ["On 1 March, a business pays a $12,000 insurance premium covering 12 months (1 March \u2013 28 February). Reporting monthly at 31 March."],
+      prompt: "What is the prepaid insurance (asset) at 31 March?",
+      options: ["$12,000", "$11,000", "$1,000", "$0"],
+      correct: 1 },
+    { num: 18, topic: "Prepayments & Accruals",
+      body: [],
+      prompt: "The journal entry on 1 March to record the $12,000 payment (GST-inclusive at 10%) is:",
+      options: ["Debit Insurance Expense $10,909; Debit GST $1,091; Credit Bank $12,000", "Debit Prepaid Insurance $12,000; Credit Bank $12,000", "Debit Prepaid Insurance $10,909; Debit GST $1,091; Credit Bank $12,000", "Debit Insurance Expense $12,000; Credit Bank $12,000"],
+      correct: 2 },
+    { num: 19, topic: "Prepayments & Accruals",
+      body: [],
+      prompt: "If the business prepares financial statements at 30 June (4 months after payment), what is the remaining prepaid insurance on the Balance Sheet?",
+      options: ["$12,000", "$8,000", "$4,000", "$11,000"],
+      correct: 1 },
+    { num: 20, topic: "Prepayments & Accruals",
+      body: [],
+      prompt: "An accrued expense (e.g., wages owed but not yet paid at period end) is recorded as:",
+      options: ["A prepayment (asset)", "A current liability", "A non-current liability", "An equity adjustment"],
+      correct: 1 }
+  ];
+
+  var LETTERS = ["A", "B", "C", "D"];
+  var SECONDS_PER_Q = 40;
+  var SUPABASE_URL = "https://your-project.supabase.co";
+  var SUPABASE_ANON_KEY = "your-publishable-anon-key";
+  var SUPABASE_TABLE = "bookkeeping_assessment_submissions";
+
+  var state = {
+    screen: "start",
+    candidateName: "",
+    current: 0,
+    answers: new Array(QUESTIONS.length).fill(null),
+    timeUsed: new Array(QUESTIONS.length).fill(0),
+    timeLeft: SECONDS_PER_Q,
+    timerId: null,
+    locked: false
+  };
+
+  var app = document.getElementById("app");
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    attrs = attrs || {};
+    for (var k in attrs) {
+      if (k === "class") e.className = attrs[k];
+      else if (k === "html") e.innerHTML = attrs[k];
+      else e.setAttribute(k, attrs[k]);
+    }
+    (children || []).forEach(function (c) {
+      if (c) e.appendChild(c);
+    });
+    return e;
+  }
+  function text(str) { return document.createTextNode(str); }
+
+  function submitAssessment(score, band) {
+    if (SUPABASE_URL.indexOf("your-project") !== -1 || SUPABASE_ANON_KEY.indexOf("your-publishable") !== -1) {
+      return Promise.reject(new Error("Supabase is not configured."));
+    }
+
+    return fetch(SUPABASE_URL + "/rest/v1/" + SUPABASE_TABLE, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify({
+        candidate_name: state.candidateName,
+        score: score,
+        score_band: band.label,
+        answers: state.answers.map(function (answer) { return answer === null ? -1 : answer; }),
+        time_used_seconds: state.timeUsed
+      })
+    }).then(function (response) {
+      if (!response.ok) throw new Error("Submission request failed.");
+    });
+  }
+
+  function clearTimer() {
+    if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+  }
+
+  function render() {
+    app.innerHTML = "";
+    if (state.screen === "start") renderStart();
+    else if (state.screen === "question") renderQuestion();
+    else if (state.screen === "results") renderResults();
+  }
+
+  function renderStart() {
+    var shell = el("div", { class: "shell" });
+    var card = el("div", { class: "start-card" });
+
+    card.appendChild(el("p", { class: "kicker" }, [text("CANDIDATE ASSESSMENT")]));
+    card.appendChild(el("h1", { class: "title" }, [text("Bookkeeping Technical Assessment")]));
+    card.appendChild(el("p", { class: "subtitle" }, [text("GST & BAS \u00B7 STP \u00B7 AP & AR \u00B7 Bank Reconciliation \u00B7 Financial Statements \u00B7 Prepayments & Accruals")]));
+
+    var metaRow = el("div", { class: "meta-row" });
+    var metas = [["Questions", "20"], ["Time per question", "40 sec"], ["Passing mark", "16 / 20 (80%)"]];
+    metas.forEach(function (m) {
+      metaRow.appendChild(el("div", { class: "meta-item" }, [
+        el("div", { class: "meta-label" }, [text(m[0])]),
+        el("div", { class: "meta-value" }, [text(m[1])])
+      ]));
+    });
+    card.appendChild(metaRow);
+
+    var label = el("label", { class: "field-label", for: "candidateName" }, [text("Candidate name")]);
+    var input = el("input", { type: "text", id: "candidateName", placeholder: "Enter your name" });
+    card.appendChild(label);
+    card.appendChild(input);
+
+    var ul = el("ul", { class: "instructions" });
+    [
+      "Each question presents a realistic bookkeeping scenario \u2014 choose the best response.",
+      "You have 40 seconds per question. The timer starts as soon as a question appears.",
+      "If time runs out, the question is marked unanswered and the assessment moves on.",
+      "Answers are recorded but not scored on screen \u2014 grading is shown once the assessment is complete."
+    ].forEach(function (l) { ul.appendChild(el("li", {}, [text(l)])); });
+    card.appendChild(ul);
+
+    var startBtn = el("button", { class: "primary" }, [text("Begin Assessment")]);
+    startBtn.addEventListener("click", function () {
+      state.candidateName = input.value.trim() || "Candidate";
+      state.current = 0;
+      state.answers = new Array(QUESTIONS.length).fill(null);
+      state.timeUsed = new Array(QUESTIONS.length).fill(0);
+      state.screen = "question";
+      render();
+      startQuestionTimer();
+    });
+    card.appendChild(startBtn);
+
+    shell.appendChild(card);
+    app.appendChild(shell);
+  }
+
+  function startQuestionTimer() {
+    clearTimer();
+    state.timeLeft = SECONDS_PER_Q;
+    state.locked = false;
+    updateTimerUI();
+    state.timerId = setInterval(function () {
+      state.timeLeft -= 1;
+      updateTimerUI();
+      if (state.timeLeft <= 0) {
+        clearTimer();
+        lockAndAdvance(null);
+      }
+    }, 1000);
+  }
+
+  function updateTimerUI() {
+    var timerEl = document.getElementById("timerVal");
+    var fillEl = document.getElementById("progressFill");
+    if (!timerEl || !fillEl) return;
+    timerEl.textContent = state.timeLeft;
+    var pct = Math.max(0, (state.timeLeft / SECONDS_PER_Q) * 100);
+    fillEl.style.width = pct + "%";
+    timerEl.className = "timer";
+    fillEl.className = "progress-fill";
+    if (state.timeLeft <= 8 && state.timeLeft > 3) {
+      timerEl.className += " warn";
+      fillEl.className += " warn";
+    } else if (state.timeLeft <= 3) {
+      timerEl.className += " danger";
+      fillEl.className += " danger";
+    }
+  }
+
+  function lockAndAdvance(optionIndex) {
+    if (state.locked) return;
+    state.locked = true;
+    clearTimer();
+    var idx = state.current;
+    state.answers[idx] = optionIndex;
+    state.timeUsed[idx] = SECONDS_PER_Q - Math.max(0, state.timeLeft);
+
+    var optionButtons = document.querySelectorAll(".option");
+    optionButtons.forEach(function (b) { b.disabled = true; });
+    if (optionIndex !== null && optionButtons[optionIndex]) {
+      optionButtons[optionIndex].classList.add("selected");
+    }
+
+    setTimeout(function () {
+      if (state.current < QUESTIONS.length - 1) {
+        state.current += 1;
+        state.screen = "question";
+        render();
+        startQuestionTimer();
+      } else {
+        state.screen = "results";
+        render();
+      }
+    }, 380);
+  }
+
+  function renderQuestion() {
+    var q = QUESTIONS[state.current];
+    var shell = el("div", { class: "shell" });
+
+    var header = el("div", { class: "q-header" }, [
+      el("div", { class: "q-progress" }, [text("Question " + q.num + " of " + QUESTIONS.length)]),
+      el("div", { class: "timer", id: "timerVal" }, [text(String(state.timeLeft))])
+    ]);
+    shell.appendChild(header);
+
+    var track = el("div", { class: "progress-track" }, [
+      el("div", { class: "progress-fill", id: "progressFill" })
+    ]);
+    shell.appendChild(track);
+
+    shell.appendChild(el("p", { class: "q-topic" }, [text(q.topic.toUpperCase())]));
+
+    var bodyWrap = el("div", { class: "q-body" });
+    q.body.forEach(function (line) { bodyWrap.appendChild(el("p", {}, [text(line)])); });
+    shell.appendChild(bodyWrap);
+
+    if (q.list) {
+      var ul = el("ul", { class: "instructions", style: "padding-left:20px;" });
+      q.list.forEach(function (item) { ul.appendChild(el("li", {}, [text(item)])); });
+      shell.appendChild(ul);
+    }
+
+    if (q.block) {
+      var block = el("div", { class: "q-block" });
+      q.block.forEach(function (row, i) {
+        var rowEl = el("div", { class: "q-block-row" + (i === 0 && q.num === 11 ? " head" : "") });
+        rowEl.appendChild(el("span", {}, [text(row[0])]));
+        if (row[1]) rowEl.appendChild(el("span", {}, [text(row[1])]));
+        block.appendChild(rowEl);
+      });
+      shell.appendChild(block);
+    }
+
+    if (q.quote) {
+      shell.appendChild(el("div", { class: "q-quote" }, [text(q.quote)]));
+    }
+
+    if (q.body2) {
+      var body2Wrap = el("div", { class: "q-body" });
+      q.body2.forEach(function (line) { body2Wrap.appendChild(el("p", {}, [text(line)])); });
+      shell.appendChild(body2Wrap);
+    }
+
+    if (q.list2) {
+      var ul2 = el("ul", { class: "instructions", style: "padding-left:20px;" });
+      q.list2.forEach(function (item) { ul2.appendChild(el("li", {}, [text(item)])); });
+      shell.appendChild(ul2);
+    }
+
+    shell.appendChild(el("p", { class: "q-prompt" }, [text(q.prompt)]));
+
+    var optionsWrap = el("div", { class: "options" });
+    q.options.forEach(function (opt, i) {
+      var btn = el("button", { class: "option" }, [
+        el("span", { class: "letter" }, [text(LETTERS[i])]),
+        el("span", {}, [text(opt)])
+      ]);
+      btn.addEventListener("click", function () { lockAndAdvance(i); });
+      optionsWrap.appendChild(btn);
+    });
+    shell.appendChild(optionsWrap);
+
+    shell.appendChild(el("p", { class: "q-footer-note" }, [text("Select the response you judge to be best. Your answer locks in once chosen.")]));
+
+    app.appendChild(shell);
+    updateTimerUI();
+  }
+
+  function scoreBand(score) {
+    if (score === 20) return { label: "Distinction (100%)", cls: "badge-strong" };
+    if (score >= 18) return { label: "High Distinction (90\u201395%)", cls: "badge-strong" };
+    if (score >= 16) return { label: "PASS (80\u201385%)", cls: "badge-pass" };
+    if (score >= 14) return { label: "Fail \u2014 close, revise weak areas", cls: "badge-borderline" };
+    if (score >= 10) return { label: "Fail \u2014 significant revision needed", cls: "badge-notpass" };
+    return { label: "Fail \u2014 foundational gaps", cls: "badge-notpass" };
+  }
+
+  function renderResults() {
+    var shell = el("div", { class: "shell" });
+
+    var score = 0;
+    state.answers.forEach(function (a, i) { if (a === QUESTIONS[i].correct) score += 1; });
+    var band = scoreBand(score);
+    var submissionStatus = el("p", { class: "results-note" }, [text("Submitting result\u2026")]);
+    submitAssessment(score, band).then(function () {
+      submissionStatus.textContent = "Result submitted for interviewer review.";
+    }).catch(function (error) {
+      console.error("Assessment submission failed:", error);
+      submissionStatus.textContent = "Result could not be submitted. Use Print / Save Results to keep a copy.";
+      submissionStatus.style.color = "var(--red)";
+    });
+
+    shell.appendChild(el("div", { class: "results-header" }, [
+      el("p", { class: "kicker" }, [text("ASSESSMENT COMPLETE \u2014 RESULTS FOR INTERVIEWER USE")]),
+      el("h1", { class: "title", style: "font-size:26px;margin-bottom:2px;" }, [text(state.candidateName)]),
+      el("p", { class: "subtitle", style: "margin-bottom:0;" }, [text("Bookkeeping Technical Assessment \u00B7 completed just now")])
+    ]));
+
+    var banner = el("div", { class: "score-banner" });
+    banner.appendChild(el("div", {}, [
+      el("div", { class: "score-num" }, [text(String(score))]),
+      el("div", { class: "score-outof" }, [text("out of " + QUESTIONS.length)])
+    ]));
+    banner.appendChild(el("div", { class: "score-badge " + band.cls }, [text(band.label)]));
+    shell.appendChild(banner);
+
+    shell.appendChild(el("p", { class: "results-note" }, [
+      text("Passing mark: 16 / 20 (80%). 20/20 = Distinction, 18\u201319 = High Distinction, 16\u201317 = Pass, 14\u201315 = Fail (close, revise weak areas), 10\u201313 = Fail (significant revision needed), below 10 = Fail (foundational gaps).")
+    ]));
+    shell.appendChild(submissionStatus);
+
+    var table = el("table", { class: "results-table" });
+    var thead = el("thead", {}, [el("tr", {}, [
+      el("th", {}, [text("Q")]),
+      el("th", {}, [text("Topic")]),
+      el("th", {}, [text("Candidate")]),
+      el("th", {}, [text("Correct")]),
+      el("th", {}, [text("Result")]),
+      el("th", {}, [text("Time")])
+    ])]);
+    table.appendChild(thead);
+    var tbody = el("tbody");
+    QUESTIONS.forEach(function (q, i) {
+      var given = state.answers[i];
+      var isCorrect = given === q.correct;
+      var givenLabel = given === null || given === undefined ? "\u2014" : LETTERS[given];
+      var verdictText = given === null || given === undefined ? "Skipped" : (isCorrect ? "Correct" : "Incorrect");
+      var verdictCls = given === null || given === undefined ? "skipped" : (isCorrect ? "correct" : "incorrect");
+      tbody.appendChild(el("tr", {}, [
+        el("td", {}, [text(String(q.num))]),
+        el("td", { class: "topic-cell" }, [text(q.topic)]),
+        el("td", {}, [text(givenLabel)]),
+        el("td", {}, [text(LETTERS[q.correct])]),
+        el("td", {}, [el("span", { class: "verdict " + verdictCls }, [text(verdictText)])]),
+        el("td", {}, [text(state.timeUsed[i] + "s")])
+      ]));
+    });
+    table.appendChild(tbody);
+    shell.appendChild(table);
+
+    var actions = el("div", { class: "results-actions" });
+    var printBtn = el("button", { class: "ghost" }, [text("Print / Save Results")]);
+    printBtn.addEventListener("click", function () { window.print(); });
+    var restartBtn = el("button", { class: "ghost" }, [text("New Candidate")]);
+    restartBtn.addEventListener("click", function () {
+      state.screen = "start";
+      state.candidateName = "";
+      state.current = 0;
+      state.answers = new Array(QUESTIONS.length).fill(null);
+      state.timeUsed = new Array(QUESTIONS.length).fill(0);
+      render();
+    });
+    actions.appendChild(printBtn);
+    actions.appendChild(restartBtn);
+    shell.appendChild(actions);
+
+    app.appendChild(shell);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
