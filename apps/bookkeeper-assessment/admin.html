@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bookkeeping Assessment &middot; Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #172439; --ink-soft: #4A5568;
+    --paper: #FAF8F3; --paper-raised: #FFFFFF; --hairline: #DEDACE;
+    --accent: #3B6E8F; --accent-soft: #EAF1F5;
+    --amber: #B8752E; --amber-soft: #FBF0E1;
+    --red: #A6362F; --red-soft: #FAE9E7;
+    --green: #3F7A5C; --green-soft: #E8F3ED;
+    --serif: 'Newsreader', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #ECE7DC; --ink-soft: #ABA79C;
+      --paper: #14181F; --paper-raised: #1C222B; --hairline: #313844;
+      --accent: #7EB1CE; --accent-soft: #1E2E38;
+      --amber: #E0A059; --amber-soft: #33291A;
+      --red: #E08079; --red-soft: #3A2222;
+      --green: #7FC29E; --green-soft: #1C2E26;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #ECE7DC; --ink-soft: #ABA79C;
+    --paper: #14181F; --paper-raised: #1C222B; --hairline: #313844;
+    --accent: #7EB1CE; --accent-soft: #1E2E38;
+    --amber: #E0A059; --amber-soft: #33291A;
+    --red: #E08079; --red-soft: #3A2222;
+    --green: #7FC29E; --green-soft: #1C2E26;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans);
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { min-height: 100%; display: flex; flex-direction: column; align-items: center; padding: 32px 20px 64px; }
+  .shell { width: 100%; max-width: 760px; }
+  .kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.03em; color: var(--accent); margin: 0 0 8px; }
+  h1.title { font-family: var(--serif); font-weight: 500; font-size: 30px; line-height: 1.15; margin: 0 0 22px; }
+
+  .card { background: var(--paper-raised); border: 1px solid var(--hairline); border-radius: 6px; padding: 36px 34px; }
+  .login-card { max-width: 380px; margin: 8vh auto 0; }
+  label.field-label { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: block; }
+  input[type="password"] {
+    width: 100%; font-family: var(--sans); font-size: 16px; padding: 12px 14px; border-radius: 4px;
+    border: 1px solid var(--hairline); background: var(--paper); color: var(--ink); margin-bottom: 18px;
+  }
+  input[type="password"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary {
+    font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--paper-raised); background: var(--ink);
+    border: none; border-radius: 4px; padding: 13px 22px; cursor: pointer; width: 100%;
+  }
+  button.primary:hover { opacity: 0.85; }
+  button.ghost {
+    font-family: var(--sans); font-size: 13.5px; font-weight: 600; color: var(--ink); background: transparent;
+    border: 1px solid var(--hairline); border-radius: 4px; padding: 9px 16px; cursor: pointer;
+  }
+  button.ghost:hover { background: var(--accent-soft); }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: -8px; margin-bottom: 12px; display: none; }
+
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat { background: var(--paper-raised); border: 1px solid var(--hairline); border-radius: 6px; padding: 10px 16px; font-size: 13px; }
+  .stat b { display: block; font-size: 18px; color: var(--ink); font-family: var(--serif); font-weight: 600; }
+
+  table.results-table { width: 100%; border-collapse: collapse; background: var(--paper-raised); border-radius: 6px; overflow: hidden; border: 1px solid var(--hairline); }
+  table.results-table th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft);
+    font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--hairline); background: var(--accent-soft);
+  }
+  table.results-table td { padding: 10px 12px; border-bottom: 1px solid var(--hairline); font-size: 13.5px; vertical-align: top; }
+  table.results-table tr:last-child td { border-bottom: none; }
+  table.results-table tr:hover td { background: var(--accent-soft); }
+  .band-badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .band-pass { background: var(--green-soft); color: var(--green); }
+  .band-borderline { background: var(--amber-soft); color: var(--amber); }
+  .band-fail { background: var(--red-soft); color: var(--red); }
+
+  .details-row td { background: var(--accent-soft); }
+  table.detail-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.detail-table th { text-align: left; padding: 4px 8px; color: var(--ink-soft); font-weight: 600; border-bottom: 1px solid var(--hairline); }
+  table.detail-table td { padding: 5px 8px; border-bottom: 1px solid var(--hairline); }
+  .verdict.correct { color: var(--green); font-weight: 700; }
+  .verdict.incorrect { color: var(--red); font-weight: 700; }
+  .verdict.skipped { color: var(--ink-soft); font-weight: 700; }
+  .toggle-link { color: var(--accent); text-decoration: underline; cursor: pointer; font-size: 12.5px; background: none; border: none; padding: 0; font-family: var(--sans); }
+  .empty-state { padding: 40px; text-align: center; color: var(--ink-soft); background: var(--paper-raised); border-radius: 6px; border: 1px solid var(--hairline); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Mirrors the QUESTIONS array in the assessment itself, trimmed to what's
+  // needed to reconstruct a per-question review (topic, prompt, options, correct answer).
+  var QUESTIONS = [
+    { num: 1, topic: "GST & BAS", prompt: "What is the total GST payable on the sale?", options: ["$20.00", "$22.00", "$37.00", "$15.00"], correct: 0 },
+    { num: 2, topic: "GST & BAS", prompt: "In which BAS period is the GST reported?", options: ["June quarter", "August quarter", "September quarter", "Split across both"], correct: 2 },
+    { num: 3, topic: "GST & BAS", prompt: "What GST credit can it claim?", options: ["$4,000", "$44,000 \u00D7 1/11 = $4,000", "Maximum $5,000 GST credit (car limit applies)", "No GST credit"], correct: 2 },
+    { num: 4, topic: "GST & BAS", prompt: "What is the total amount payable on the BAS?", options: ["$16,500", "$7,000", "$14,500", "$10,500"], correct: 0 },
+    { num: 5, topic: "STP", prompt: "Under STP Phase 2, the gross amount reported should be:", options: ["$2,500", "$2,400", "$2,225", "$2,600"], correct: 0 },
+    { num: 6, topic: "STP", prompt: "Under STP:", options: ["The contractor must be reported through STP", "The contractor is NOT reported through STP (reported via TPAR)", "The contractor is reported as an employee", "Only if paid over $75,000"], correct: 1 },
+    { num: 7, topic: "STP", prompt: "Under STP Phase 2, disaggregation of gross requires reporting of:", options: ["Only gross and tax", "Gross split into salary, allowances, overtime, bonuses, etc.", "Net pay only", "Super only"], correct: 1 },
+    { num: 8, topic: "AP & AR", prompt: "The correct action is:", options: ["Pay the invoice as-is", "Raise a discrepancy note and request a credit note", "Part-pay the invoice", "Ignore the PO"], correct: 1 },
+    { num: 9, topic: "AP & AR", prompt: "If paid within the discount period, the journal entry is:", options: ["Debit Bank $5,390; Debit Discount $110; Credit AR $5,500", "Debit Bank $5,500; Credit AR $5,500", "Debit Bank $5,390; Debit Discount $100; Debit GST $10; Credit AR $5,500", "Debit Bank $5,390; Credit AR $5,390"], correct: 2 },
+    { num: 10, topic: "AP & AR", prompt: "Doubtful debt provision?", options: ["$1,800", "$2,100", "$1,600", "$850"], correct: 1 },
+    { num: 11, topic: "Bank Reconciliation", prompt: "What is the adjusted bank balance?", options: ["$22,500", "$23,500", "$21,500", "$22,000"], correct: 2 },
+    { num: 12, topic: "Bank Reconciliation", prompt: "The correcting entry is:", options: ["Debit Insurance $880; Credit Bank $880", "Debit Bank $880; Credit Insurance $880", "Debit Insurance $800; Debit GST $80; Credit Bank $880", "No entry needed"], correct: 2 },
+    { num: 13, topic: "Bank Reconciliation", prompt: "To reconcile, you must:", options: ["Add $1,350 to the cash book", "Deduct $1,350 from the cash book", "Add $1,350 to the bank statement", "Deduct $1,350 from the bank statement"], correct: 0 },
+    { num: 14, topic: "Financial Statements", prompt: "What is owner's equity?", options: ["$43,000", "$45,000", "$33,000", "$53,000"], correct: 0 },
+    { num: 15, topic: "Financial Statements", prompt: "Cash flow from operations (simplified)?", options: ["$82,000", "$98,000", "$88,000", "$78,000"], correct: 0 },
+    { num: 16, topic: "Financial Statements", prompt: "This means:", options: ["It can easily pay short-term debts", "It may struggle to pay short-term debts", "It has too much cash", "It is highly profitable"], correct: 1 },
+    { num: 17, topic: "Prepayments & Accruals", prompt: "What is the prepaid insurance (asset) at 31 March?", options: ["$12,000", "$11,000", "$1,000", "$0"], correct: 1 },
+    { num: 18, topic: "Prepayments & Accruals", prompt: "The journal entry on 1 March to record the $12,000 payment (GST-inclusive at 10%) is:", options: ["Debit Insurance Expense $10,909; Debit GST $1,091; Credit Bank $12,000", "Debit Prepaid Insurance $12,000; Credit Bank $12,000", "Debit Prepaid Insurance $10,909; Debit GST $1,091; Credit Bank $12,000", "Debit Insurance Expense $12,000; Credit Bank $12,000"], correct: 2 },
+    { num: 19, topic: "Prepayments & Accruals", prompt: "If the business prepares financial statements at 30 June (4 months after payment), what is the remaining prepaid insurance on the Balance Sheet?", options: ["$12,000", "$8,000", "$4,000", "$11,000"], correct: 1 },
+    { num: 20, topic: "Prepayments & Accruals", prompt: "An accrued expense (e.g., wages owed but not yet paid at period end) is recorded as:", options: ["A prepayment (asset)", "A current liability", "A non-current liability", "An equity adjustment"], correct: 1 }
+  ];
+  var LETTERS = ["A", "B", "C", "D"];
+  var SESSION_KEY = "bookkeeperAdminPassword";
+
+  var app = document.getElementById("app");
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    attrs = attrs || {};
+    for (var k in attrs) { if (k === "class") e.className = attrs[k]; else if (k === "html") e.innerHTML = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    (children || []).forEach(function (c) { if (c) e.appendChild(c); });
+    return e;
+  }
+  function text(str) { return document.createTextNode(str); }
+
+  function bandClass(band) {
+    var lower = (band || "").toLowerCase();
+    if (lower.indexOf("fail") !== -1) return "band-fail";
+    if (lower.indexOf("pass") !== -1 || lower.indexOf("distinction") !== -1) return "band-pass";
+    return "band-borderline";
+  }
+  function fmtDate(iso) {
+    if (!iso) return "\u2013";
+    return new Date(iso).toLocaleString();
+  }
+
+  function render() {
+    app.innerHTML = "";
+    var shell = el("div", { class: "shell" });
+    shell.appendChild(el("p", { class: "kicker" }, [text("BOOKKEEPING TECHNICAL ASSESSMENT")]));
+    shell.appendChild(el("h1", { class: "title" }, [text("Results \u00B7 admin")]));
+
+    var savedPassword = sessionStorage.getItem(SESSION_KEY);
+    if (savedPassword) {
+      shell.appendChild(el("div", { id: "dashboard" }));
+      app.appendChild(shell);
+      loadResults(savedPassword);
+    } else {
+      shell.appendChild(renderLoginCard());
+      app.appendChild(shell);
+    }
+  }
+
+  function renderLoginCard() {
+    var card = el("div", { class: "card login-card" });
+    card.appendChild(el("label", { class: "field-label" }, [text("Admin password")]));
+    var input = el("input", { type: "password", placeholder: "Admin password" });
+    var error = el("div", { class: "error-msg" }, [text("Incorrect password. Try again.")]);
+    var btn = el("button", { class: "primary" }, [text("View results")]);
+    card.appendChild(input);
+    card.appendChild(error);
+    card.appendChild(btn);
+
+    function attempt() {
+      var pw = input.value.trim();
+      if (!pw) return;
+      sessionStorage.setItem(SESSION_KEY, pw);
+      error.style.display = "none";
+      render();
+    }
+    btn.addEventListener("click", attempt);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") attempt(); });
+
+    // If we just failed auth, showLoginError() below re-renders and sets this flag
+    if (window.__bookkeeperLoginFailed) {
+      error.style.display = "block";
+      window.__bookkeeperLoginFailed = false;
+    }
+    return card;
+  }
+
+  function loadResults(password) {
+    var dash = document.getElementById("dashboard");
+    dash.innerHTML = "";
+    dash.appendChild(el("div", { class: "empty-state" }, [text("Loading results\u2026")]));
+
+    fetch("/.netlify/functions/get-results", { headers: { "x-admin-password": password } })
+      .then(function (res) {
+        if (res.status === 401) {
+          sessionStorage.removeItem(SESSION_KEY);
+          window.__bookkeeperLoginFailed = true;
+          render();
+          return null;
+        }
+        if (!res.ok) throw new Error("Request failed: " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (data) renderDashboard(dash, data.submissions, password);
+      })
+      .catch(function (err) {
+        console.error(err);
+        dash.innerHTML = "";
+        dash.appendChild(el("div", { class: "empty-state" }, [text("Could not load results. Check your connection and try refreshing.")]));
+      });
+  }
+
+  function renderDashboard(dash, submissions, password) {
+    dash.innerHTML = "";
+
+    var toolbar = el("div", { class: "toolbar" });
+    var statRow = el("div", { class: "stat-row" });
+    var logoutBtn = el("button", { class: "ghost" }, [text("Log out")]);
+    var refreshBtn = el("button", { class: "ghost" }, [text("Refresh")]);
+    logoutBtn.addEventListener("click", function () { sessionStorage.removeItem(SESSION_KEY); render(); });
+    refreshBtn.addEventListener("click", function () { loadResults(password); });
+    var btnGroup = el("div", { style: "display:flex; gap:8px;" }, [refreshBtn, logoutBtn]);
+    toolbar.appendChild(statRow);
+    toolbar.appendChild(btnGroup);
+    dash.appendChild(toolbar);
+
+    if (!submissions || submissions.length === 0) {
+      dash.appendChild(el("div", { class: "empty-state" }, [text("No submissions recorded yet.")]));
+      return;
+    }
+
+    var total = submissions.length;
+    var passCount = submissions.filter(function (s) { return (s.score_band || "").toLowerCase().indexOf("pass") !== -1 || (s.score_band || "").toLowerCase().indexOf("distinction") !== -1; }).length;
+    var avgScore = Math.round((submissions.reduce(function (sum, s) { return sum + Number(s.score || 0); }, 0) / total) * 10) / 10;
+
+    statRow.appendChild(el("div", { class: "stat" }, [text("Submissions"), el("b", {}, [text(String(total))])]));
+    statRow.appendChild(el("div", { class: "stat" }, [text("Passed"), el("b", {}, [text(passCount + " / " + total)])]));
+    statRow.appendChild(el("div", { class: "stat" }, [text("Average score"), el("b", {}, [text(avgScore + " / 20")])]));
+
+    var table = el("table", { class: "results-table" });
+    table.appendChild(el("thead", {}, [el("tr", {}, [
+      el("th", {}, [text("Candidate")]),
+      el("th", {}, [text("Score")]),
+      el("th", {}, [text("Result")]),
+      el("th", {}, [text("Submitted")]),
+      el("th", {}, [])
+    ])]));
+    var tbody = el("tbody");
+
+    submissions.forEach(function (s, idx) {
+      tbody.appendChild(el("tr", {}, [
+        el("td", {}, [text(s.candidate_name)]),
+        el("td", {}, [text(s.score + " / 20")]),
+        el("td", {}, [el("span", { class: "band-badge " + bandClass(s.score_band) }, [text(s.score_band)])]),
+        el("td", {}, [text(fmtDate(s.submitted_at))]),
+        el("td", {}, [(function () {
+          var btn = el("button", { class: "toggle-link" }, [text("View answers")]);
+          btn.addEventListener("click", function () {
+            var row = document.getElementById("detail-" + idx);
+            row.classList.toggle("hidden");
+          });
+          return btn;
+        })()])
+      ]));
+
+      var detailRow = el("tr", { class: "details-row hidden", id: "detail-" + idx });
+      var detailCell = el("td", { colspan: "5" });
+      detailCell.appendChild(buildDetailTable(s));
+      detailRow.appendChild(detailCell);
+      tbody.appendChild(detailRow);
+    });
+
+    table.appendChild(tbody);
+    dash.appendChild(table);
+  }
+
+  function buildDetailTable(submission) {
+    var t = el("table", { class: "detail-table" });
+    t.appendChild(el("thead", {}, [el("tr", {}, [
+      el("th", {}, [text("Q")]),
+      el("th", {}, [text("Topic")]),
+      el("th", {}, [text("Given")]),
+      el("th", {}, [text("Correct")]),
+      el("th", {}, [text("Result")]),
+      el("th", {}, [text("Time")])
+    ])]));
+    var tbody = el("tbody");
+    QUESTIONS.forEach(function (q, i) {
+      var given = submission.answers ? submission.answers[i] : null;
+      var isSkipped = given === null || given === undefined || given === -1;
+      var isCorrect = !isSkipped && given === q.correct;
+      var givenLabel = isSkipped ? "\u2014" : LETTERS[given];
+      var verdictText = isSkipped ? "Skipped" : (isCorrect ? "Correct" : "Incorrect");
+      var verdictCls = isSkipped ? "skipped" : (isCorrect ? "correct" : "incorrect");
+      var timeUsed = submission.time_used_seconds ? submission.time_used_seconds[i] : "\u2013";
+      tbody.appendChild(el("tr", {}, [
+        el("td", {}, [text(String(q.num))]),
+        el("td", {}, [text(q.topic)]),
+        el("td", {}, [text(givenLabel)]),
+        el("td", {}, [text(LETTERS[q.correct])]),
+        el("td", {}, [el("span", { class: "verdict " + verdictCls }, [text(verdictText)])]),
+        el("td", {}, [text(timeUsed + "s")])
+      ]));
+    });
+    t.appendChild(tbody);
+    return t;
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
