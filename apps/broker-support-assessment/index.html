@@ -750,10 +750,10 @@ function scoreAll(){
    RESULTS RENDER
    ============================================================ */
 function submitResultsToBackend(payload){
-  fetch('/.netlify/functions/submit-results', {
+  fetch('/.netlify/functions/submit-result', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
+    body: JSON.stringify({app_id:'broker-support-assessment', result:payload})
   }).then(res=>{
     if(!res.ok) throw new Error('Bad response: '+res.status);
     const statusEl = document.getElementById('saveStatus');

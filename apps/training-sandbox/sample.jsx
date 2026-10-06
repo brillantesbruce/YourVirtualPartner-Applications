@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import {
   Clock, CheckCircle2, XCircle, Users, LayoutGrid, ClipboardList,
   ArrowLeft, RotateCcw, FileText, ChevronRight, Circle, CheckCircle,
@@ -690,20 +689,22 @@ export default function App() {
     setResult(res);
 
     setSaveError("");
-    if (!supabaseConfigured) {
-      setSaveError("This result was scored locally, but shared result storage is not configured.");
-      return;
-    }
-
     try {
-      const { error } = await supabase.from("leaderboard_attempts").insert({
-        trainee_name: trainee.trim() || "Anonymous",
-        case_id: activeCase.id,
-        case_title: activeCase.title,
-        accuracy_pct: accuracyPct,
-        time_seconds: Number(timeSeconds.toFixed(2)),
+      const response = await fetch("/.netlify/functions/submit-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          app_id: "training-sandbox",
+          result: {
+            trainee_name: trainee.trim() || "Anonymous",
+            case_id: activeCase.id,
+            case_title: activeCase.title,
+            accuracy_pct: accuracyPct,
+            time_seconds: Number(timeSeconds.toFixed(2)),
+          },
+        }),
       });
-      if (error) throw error;
+      if (!response.ok) throw new Error(`Submission failed with status ${response.status}.`);
     } catch (error) {
       console.error("Failed to save practice result:", error);
       setSaveError("This result was scored, but it could not be saved to shared results.");

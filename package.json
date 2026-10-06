@@ -1,0 +1,13 @@
+{
+  "name": "yvp-web-apps-portal",
+  "private": true,
+  "workspaces": [
+    "apps/training-sandbox"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4"
+  }
+}

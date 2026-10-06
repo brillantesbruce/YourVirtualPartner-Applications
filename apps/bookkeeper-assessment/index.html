@@ -541,9 +541,6 @@
 
   var LETTERS = ["A", "B", "C", "D"];
   var SECONDS_PER_Q = 40;
-  var SUPABASE_URL = "https://aynhbcildaxhsytsidft.supabase.co";
-  var SUPABASE_ANON_KEY = "sb_publishable_z81nlRsdLESJkduArnpS8w_9EqeSdZ7";
-  var SUPABASE_TABLE = "bookkeeping_assessment_submissions";
 
   var state = {
     screen: "start",
@@ -574,24 +571,20 @@
   function text(str) { return document.createTextNode(str); }
 
   function submitAssessment(score, band) {
-    if (SUPABASE_URL.indexOf("your-project") !== -1 || SUPABASE_ANON_KEY.indexOf("your-publishable") !== -1) {
-      return Promise.reject(new Error("Supabase is not configured."));
-    }
-
-    return fetch(SUPABASE_URL + "/rest/v1/" + SUPABASE_TABLE, {
+    return fetch("/.netlify/functions/submit-result", {
       method: "POST",
       headers: {
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
         "Content-Type": "application/json",
-        "Prefer": "return=minimal"
       },
       body: JSON.stringify({
-        candidate_name: state.candidateName,
-        score: score,
-        score_band: band.label,
-        answers: state.answers.map(function (answer) { return answer === null ? -1 : answer; }),
-        time_used_seconds: state.timeUsed
+        app_id: "bookkeeper-assessment",
+        result: {
+          candidate_name: state.candidateName,
+          score: score,
+          score_band: band.label,
+          answers: state.answers.map(function (answer) { return answer === null ? -1 : answer; }),
+          time_used_seconds: state.timeUsed
+        }
       })
     }).then(function (response) {
       if (!response.ok) throw new Error("Submission request failed.");

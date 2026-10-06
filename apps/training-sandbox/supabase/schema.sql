@@ -20,12 +20,6 @@ drop policy if exists "Anyone can view leaderboard attempts"
   on public.leaderboard_attempts;
 drop policy if exists "Anyone can submit leaderboard attempts"
   on public.leaderboard_attempts;
-create policy "Anyone can submit leaderboard attempts"
-  on public.leaderboard_attempts
-  for insert
-  to anon, authenticated
-  with check (true);
 
-revoke select on public.leaderboard_attempts from anon, authenticated;
-grant insert on public.leaderboard_attempts to anon, authenticated;
-grant usage on sequence public.leaderboard_attempts_id_seq to anon, authenticated;
+revoke all on public.leaderboard_attempts from anon, authenticated;
+revoke all on sequence public.leaderboard_attempts_id_seq from anon, authenticated;

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>YVP Results | Admin</title>
+  <style>
+    :root { font-family: Inter, "Segoe UI", sans-serif; color: #16294b; background: #f7f5f1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 22px max(24px, calc((100% - 1180px) / 2)); color: white; background: #16294b; }
+    header p { margin: 0 0 5px; color: #e3c57d; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+    header h1 { margin: 0; font-size: 22px; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 30px auto; }
+    .login { max-width: 390px; margin: 8vh auto; padding: 24px; border: 1px solid #e4dfd3; border-radius: 10px; background: white; }
+    label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; }
+    input, select { padding: 10px 12px; border: 1px solid #d6d0c3; border-radius: 6px; background: white; color: inherit; font: inherit; }
+    input { width: 100%; margin-bottom: 14px; }
+    button { padding: 10px 15px; border: 0; border-radius: 6px; color: white; background: #16294b; font: inherit; font-weight: 600; cursor: pointer; }
+    button:disabled { cursor: wait; opacity: .65; }
+    button.secondary { border: 1px solid #d6d0c3; color: #16294b; background: white; }
+    .login button { width: 100%; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+    .toolbar-actions { display: flex; align-items: center; gap: 9px; }
+    .stats, .sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .stat, .source { padding: 13px 15px; border: 1px solid #e4dfd3; border-radius: 8px; background: white; font-size: 13px; }
+    .stat strong { display: block; margin-top: 5px; font-size: 20px; }
+    .source strong { display: block; margin-bottom: 4px; }
+    .source.error { border-color: #d6a4a1; background: #fff9f8; }
+    .muted { color: #6b7280; }
+    .message { margin: 10px 0 0; color: #a6362f; font-size: 13px; }
+    .notice { margin: 12px 0; color: #7d4c17; font-size: 13px; }
+    .table-wrap { overflow-x: auto; border: 1px solid #e4dfd3; border-radius: 8px; background: white; }
+    table { width: 100%; min-width: 900px; border-collapse: collapse; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e4dfd3; text-align: left; vertical-align: top; font-size: 13px; }
+    th { position: sticky; top: 0; color: #6b7280; background: #faf8f3; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    .details-button { padding: 5px 8px; border: 1px solid #d6d0c3; color: #16294b; background: white; font-size: 12px; }
+    .details td { background: #faf8f3; }
+    pre { max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 600px) {
+      header { padding: 18px 16px; }
+      .toolbar { align-items: stretch; flex-direction: column; }
+      .toolbar-actions { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p>Your Virtual Partner · Admin</p>
+    <h1>Training &amp; Assessment Results</h1>
+  </header>
+  <main>
+    <section class="login" id="login">
+      <h2>Admin sign in</h2>
+      <form id="loginForm">
+        <label for="password">Admin password</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button id="loginButton" type="submit">View results</button>
+        <p class="message" id="loginMessage" role="alert" hidden></p>
+      </form>
+    </section>
+    <section id="dashboard" hidden>
+      <div class="toolbar">
+        <p class="muted">Showing up to 500 most recent submissions per app.</p>
+        <div class="toolbar-actions">
+          <label for="appFilter">Filter</label>
+          <select id="appFilter"><option value="all">All apps</option></select>
+          <button class="secondary" id="refresh" type="button">Refresh</button>
+          <button class="secondary" id="logout" type="button">Log out</button>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="sources" id="sources"></div>
+      <p class="notice" id="partialNotice" hidden></p>
+      <div id="results" class="muted">Loading results…</div>
+    </section>
+  </main>
+  <script>
+    const sessionKey = "yvpAdminPassword";
+    const login = document.getElementById("login");
+    const dashboard = document.getElementById("dashboard");
+    const loginForm = document.getElementById("loginForm");
+    const loginButton = document.getElementById("loginButton");
+    const loginMessage = document.getElementById("loginMessage");
+    const appFilter = document.getElementById("appFilter");
+    let attempts = [];
+    let sources = [];
+
+    function appendCell(row, content) {
+      const cell = document.createElement("td");
+      cell.textContent = content == null || content === "" ? "—" : String(content);
+      row.appendChild(cell);
+      return cell;
+    }
+
+    function formatDuration(seconds) {
+      if (seconds == null || !Number.isFinite(Number(seconds))) return "—";
+      const total = Math.round(Number(seconds));
+      return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+    }
+
+    function render() {
+      const selectedApp = appFilter.value;
+      const filtered = selectedApp === "all"
+        ? attempts
+        : attempts.filter((attempt) => attempt.appId === selectedApp);
+      const successfulSources = sources.filter((source) => source.status === "ok");
+      const total = successfulSources.reduce((sum, source) => sum + source.count, 0);
+      const average = filtered.length
+        ? filtered.reduce((sum, attempt) => sum + attempt.percentage, 0) / filtered.length
+        : 0;
+
+      const stats = document.getElementById("stats");
+      stats.replaceChildren();
+      [
+        ["Submissions", String(selectedApp === "all" ? total : filtered.length)],
+        ["Average score", filtered.length ? `${average.toFixed(1)}%` : "—"],
+        ["Connected apps", `${successfulSources.length} / ${sources.length}`],
+      ].forEach(([label, value]) => {
+        const card = document.createElement("div");
+        card.className = "stat";
+        card.append(document.createTextNode(label));
+        const strong = document.createElement("strong");
+        strong.textContent = value;
+        card.appendChild(strong);
+        stats.appendChild(card);
+      });
+
+      const sourceCards = document.getElementById("sources");
+      sourceCards.replaceChildren();
+      sources.forEach((source) => {
+        const card = document.createElement("div");
+        card.className = `source${source.status === "ok" ? "" : " error"}`;
+        const name = document.createElement("strong");
+        name.textContent = source.name;
+        const status = document.createElement("span");
+        status.className = "muted";
+        status.textContent = source.status === "ok"
+          ? `${source.count} results loaded`
+          : source.error;
+        card.append(name, status);
+        sourceCards.appendChild(card);
+      });
+
+      const failedSources = sources.filter((source) => source.status !== "ok");
+      const partialNotice = document.getElementById("partialNotice");
+      partialNotice.hidden = failedSources.length === 0;
+      partialNotice.textContent = failedSources.length
+        ? "Some apps could not be loaded; their results are not included below. Check their environment variables or database connection."
+        : "";
+
+      const results = document.getElementById("results");
+      results.replaceChildren();
+      if (!filtered.length) {
+        results.textContent = successfulSources.length
+          ? "No results to show for this selection."
+          : "No app result sources are connected yet.";
+        return;
+      }
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-wrap";
+      const table = document.createElement("table");
+      const head = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      ["Submitted", "App", "Candidate", "Assessment", "Score", "Outcome", "Time", "Details"].forEach((label) => {
+        const cell = document.createElement("th");
+        cell.textContent = label;
+        headerRow.appendChild(cell);
+      });
+      head.appendChild(headerRow);
+      table.appendChild(head);
+      const body = document.createElement("tbody");
+      filtered.forEach((attempt) => {
+        const row = document.createElement("tr");
+        appendCell(row, new Date(attempt.submittedAt).toLocaleString());
+        appendCell(row, attempt.appName);
+        appendCell(row, attempt.candidate);
+        appendCell(row, attempt.assessment);
+        appendCell(row, `${attempt.score}${Number.isFinite(attempt.percentage) ? ` (${attempt.percentage.toFixed(1)}%)` : ""}`);
+        appendCell(row, attempt.outcome || "—");
+        appendCell(row, formatDuration(attempt.durationSeconds));
+        const detailsCell = appendCell(row, "");
+        const detailsButton = document.createElement("button");
+        detailsButton.type = "button";
+        detailsButton.className = "details-button";
+        detailsButton.textContent = "View";
+        detailsCell.appendChild(detailsButton);
+        body.appendChild(row);
+
+        const detailsRow = document.createElement("tr");
+        detailsRow.className = "details";
+        detailsRow.hidden = true;
+        const details = document.createElement("td");
+        details.colSpan = 8;
+        const pre = document.createElement("pre");
+        pre.textContent = JSON.stringify(attempt.details, null, 2);
+        details.appendChild(pre);
+        detailsRow.appendChild(details);
+        detailsButton.addEventListener("click", () => {
+          detailsRow.hidden = !detailsRow.hidden;
+          detailsButton.textContent = detailsRow.hidden ? "View" : "Hide";
+        });
+        body.appendChild(detailsRow);
+      });
+      table.appendChild(body);
+      wrapper.appendChild(table);
+      results.appendChild(wrapper);
+    }
+
+    async function loadResults(password) {
+      document.getElementById("results").textContent = "Loading results…";
+      try {
+        const response = await fetch("/.netlify/functions/get-results", {
+          headers: { "x-admin-password": password },
+          cache: "no-store",
+        });
+        if (response.status === 401) {
+          sessionStorage.removeItem(sessionKey);
+          dashboard.hidden = true;
+          login.hidden = false;
+          loginMessage.textContent = "Incorrect admin password.";
+          loginMessage.hidden = false;
+          return false;
+        }
+        if (!response.ok) throw new Error(`Admin request failed (${response.status}).`);
+        const result = await response.json();
+        attempts = result.attempts;
+        sources = result.apps;
+        const currentFilter = appFilter.value;
+        appFilter.replaceChildren(new Option("All apps", "all"));
+        sources.forEach((source) => appFilter.add(new Option(source.name, source.id)));
+        appFilter.value = sources.some((source) => source.id === currentFilter) ? currentFilter : "all";
+        login.hidden = true;
+        dashboard.hidden = false;
+        render();
+        return true;
+      } catch (error) {
+        console.error("Could not load admin results:", error);
+        loginMessage.textContent = "Could not load results. Check the Netlify environment variables and try again.";
+        loginMessage.hidden = false;
+        document.getElementById("results").textContent = "Results could not be loaded.";
+        return false;
+      }
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const password = document.getElementById("password").value;
+      loginButton.disabled = true;
+      loginMessage.hidden = true;
+      if (await loadResults(password)) sessionStorage.setItem(sessionKey, password);
+      loginButton.disabled = false;
+    });
+    appFilter.addEventListener("change", render);
+    document.getElementById("refresh").addEventListener("click", () => {
+      loadResults(sessionStorage.getItem(sessionKey) || "");
+    });
+    document.getElementById("logout").addEventListener("click", () => {
+      sessionStorage.removeItem(sessionKey);
+      attempts = [];
+      sources = [];
+      dashboard.hidden = true;
+      login.hidden = false;
+      document.getElementById("password").value = "";
+      loginMessage.hidden = true;
+    });
+
+    const savedPassword = sessionStorage.getItem(sessionKey);
+    if (savedPassword) loadResults(savedPassword);
+  </script>
+</body>
+</html>
