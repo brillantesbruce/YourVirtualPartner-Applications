@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import {
-  Clock, CheckCircle2, XCircle, Trophy, Users, LayoutGrid, ClipboardList,
-  ArrowLeft, RotateCcw, AlertCircle, FileText, ChevronRight, Circle, CheckCircle,
+  Clock, CheckCircle2, XCircle, Users, LayoutGrid, ClipboardList,
+  ArrowLeft, RotateCcw, FileText, ChevronRight, Circle, CheckCircle,
 } from "lucide-react";
 
 const C = {
@@ -374,7 +374,6 @@ function Sidebar({ view, setView }) {
   const items = [
     { id: "practice", label: "Data Entry Practice", icon: ClipboardList },
     { id: "pipeline", label: "Pipeline (view only)", icon: LayoutGrid },
-    { id: "leaderboard", label: "Leaderboard", icon: Trophy },
   ];
   return (
     <div style={{ background: `linear-gradient(180deg, ${C.navy}, ${C.navyDeep})`, width: 230, minWidth: 230, color: "white", padding: "20px 14px" }}>
@@ -645,44 +644,6 @@ function PipelineView() {
   );
 }
 
-function LeaderboardView({ attempts, loading, error }) {
-  const sorted = [...attempts].sort((a, b) => b.accuracyPct - a.accuracyPct || a.timeSeconds - b.timeSeconds).slice(0, 25);
-  return (
-    <div style={{ padding: 26 }} className="fade-in">
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-        <Trophy size={18} color={C.gold} /><h1 style={{ fontSize: 20, fontWeight: 700, color: C.ink }}>Leaderboard</h1>
-      </div>
-      <p style={{ fontSize: 13, color: C.sub, marginBottom: 4 }}>Best submitted attempts across everyone using this sandbox, ranked by accuracy then speed.</p>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: C.sub, marginBottom: 18 }}>
-        <AlertCircle size={13} /> Visible to anyone using this training tool.
-      </div>
-      {error ? (
-        <div style={{ fontSize: 13, color: C.error }}>{error}</div>
-      ) : loading ? (
-        <div style={{ fontSize: 13, color: C.sub }}>Loading results…</div>
-      ) : sorted.length === 0 ? (
-        <div style={{ fontSize: 13, color: C.sub }}>No attempts submitted yet — be the first.</div>
-      ) : (
-        <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 1fr 90px 90px 100px", padding: "10px 18px", fontSize: 11, color: C.sub, borderBottom: `1px solid ${C.border}` }} className="mono">
-            <span>#</span><span>Trainee</span><span>Case</span><span>Accuracy</span><span>Time</span><span>Date</span>
-          </div>
-          {sorted.map((a, i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 1fr 1fr 90px 90px 100px", padding: "10px 18px", fontSize: 12.5, borderBottom: `1px solid ${C.border}`, alignItems: "center" }}>
-              <span className="mono" style={{ color: C.gold, fontWeight: 700 }}>{i + 1}</span>
-              <span style={{ fontWeight: 600, color: C.ink }}>{a.trainee || "Anonymous"}</span>
-              <span style={{ color: C.sub }}>{a.caseTitle}</span>
-              <span className="mono" style={{ color: a.accuracyPct === 100 ? C.success : C.ink }}>{a.accuracyPct}%</span>
-              <span className="mono">{formatElapsed(a.timeSeconds)}</span>
-              <span style={{ color: C.sub, fontSize: 11.5 }}>{new Date(a.timestamp).toLocaleDateString()}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function App() {
   const [view, setView] = useState("practice");
   const [trainee, setTrainee] = useState("");
@@ -691,46 +652,8 @@ export default function App() {
   const [startTime, setStartTime] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState(null);
-  const [attempts, setAttempts] = useState([]);
-  const [loadingBoard, setLoadingBoard] = useState(false);
-  const [leaderboardError, setLeaderboardError] = useState("");
   const [saveError, setSaveError] = useState("");
   const intervalRef = useRef(null);
-
-  const loadLeaderboard = useCallback(async () => {
-    setLoadingBoard(true);
-    setLeaderboardError("");
-    if (!supabaseConfigured) {
-      setAttempts([]);
-      setLeaderboardError("The shared leaderboard is not configured yet.");
-      setLoadingBoard(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("leaderboard_attempts")
-      .select("trainee_name, case_id, case_title, accuracy_pct, time_seconds, submitted_at")
-      .order("accuracy_pct", { ascending: false })
-      .order("time_seconds", { ascending: true })
-      .limit(200);
-
-    if (error) {
-      setAttempts([]);
-      setLeaderboardError("Could not load the shared leaderboard. Please try again.");
-    } else {
-      setAttempts(data.map((attempt) => ({
-        trainee: attempt.trainee_name,
-        caseId: attempt.case_id,
-        caseTitle: attempt.case_title,
-        accuracyPct: attempt.accuracy_pct,
-        timeSeconds: Number(attempt.time_seconds),
-        timestamp: attempt.submitted_at,
-      })));
-    }
-    setLoadingBoard(false);
-  }, []);
-
-  useEffect(() => { if (view === "leaderboard") loadLeaderboard(); }, [view, loadLeaderboard]);
 
   useEffect(() => {
     if (activeCase && !result) {
@@ -768,19 +691,22 @@ export default function App() {
 
     setSaveError("");
     if (!supabaseConfigured) {
-      setSaveError("This result was scored locally, but the shared leaderboard is not configured.");
+      setSaveError("This result was scored locally, but shared result storage is not configured.");
       return;
     }
 
-    const { error } = await supabase.from("leaderboard_attempts").insert({
-      trainee_name: trainee.trim() || "Anonymous",
-      case_id: activeCase.id,
-      case_title: activeCase.title,
-      accuracy_pct: accuracyPct,
-      time_seconds: Number(timeSeconds.toFixed(2)),
-    });
-    if (error) {
-      setSaveError("This result was scored, but it could not be added to the shared leaderboard.");
+    try {
+      const { error } = await supabase.from("leaderboard_attempts").insert({
+        trainee_name: trainee.trim() || "Anonymous",
+        case_id: activeCase.id,
+        case_title: activeCase.title,
+        accuracy_pct: accuracyPct,
+        time_seconds: Number(timeSeconds.toFixed(2)),
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Failed to save practice result:", error);
+      setSaveError("This result was scored, but it could not be saved to shared results.");
     }
   };
 
@@ -788,7 +714,6 @@ export default function App() {
 
   let body;
   if (view === "pipeline") body = <PipelineView />;
-  else if (view === "leaderboard") body = <LeaderboardView attempts={attempts} loading={loadingBoard} error={leaderboardError} />;
   else if (!activeCase) body = <CaseSelect onPick={pickCase} />;
   else if (result) body = <ResultView activeCase={activeCase} result={result} saveError={saveError} onRetry={backToCases} onBack={backToCases} />;
   else body = <CaseForm key={activeCase.id} activeCase={activeCase} formData={formData} setFormData={setFormData} onSubmit={submit} />;

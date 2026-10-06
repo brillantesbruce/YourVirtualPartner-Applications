@@ -1,32 +1,49 @@
-# Shared leaderboard backend
+# Shared practice results and admin page
 
-The app is still hosted as a static Vite build on Netlify. Supabase provides
-the Postgres database and browser-accessible API; no custom server is required
-for the current anonymous leaderboard.
+The training sandbox is hosted on Netlify, with Supabase storing submitted
+attempts. The main app no longer displays results. Use `/admin.html` to reach
+the separate password-protected admin page.
 
 ## Supabase setup
 
-1. Create a Supabase project on the free tier.
-2. Open **SQL Editor**, run [`supabase/schema.sql`](./supabase/schema.sql), and
-   confirm the table and policies were created.
-3. In **Project Settings > API**, copy the project URL and the publishable
-   anon key. Never use a service-role key in this frontend.
-4. Copy `.env.example` to `.env.local` and fill in
-   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-5. Start the app with `npm run dev`, submit an attempt, and confirm it appears
-   in the shared leaderboard.
+1. Open the Supabase project used by this app.
+2. Run [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL
+   Editor. It removes the old public leaderboard read policy and keeps
+   anonymous inserts enabled.
+3. Confirm the `leaderboard_attempts` table exists.
+
+The public app can submit attempts, but it cannot read the table. Results are
+read by the Netlify function using a server-only service-role key.
 
 ## Netlify setup
 
-Add the same two variables under **Site configuration > Environment variables**
-for the deploy context, then trigger a new deploy. Netlify continues to run
-`npm run build` and publish `dist` as configured in `netlify.toml`.
+Set the site's base directory to `apps/training-sandbox`. Netlify uses
+`netlify.toml` to build with `npm run build`, publish `dist`, and deploy the
+function in `netlify/functions`.
 
-## Current security boundary
+Add these variables under **Site configuration > Environment variables**:
 
-Only the display name, case identifier/title, score, time, and submission time
-are stored. The completed application form and source case documents are not
-sent to Supabase. Because submissions are anonymous, users can still submit
-fake names or scores; this leaderboard is not an authoritative assessment
-record. Add Supabase Auth and user-scoped Row Level Security before storing
-official trainee progress or sensitive broker/client data.
+| Variable | Used by | Notes |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | Frontend build | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Frontend build | Publishable/anon key; browser-visible |
+| `SUPABASE_URL` | Netlify function | Same Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Netlify function | Secret; never put in frontend code |
+| `ADMIN_PASSWORD` | Netlify function | Strong password for `/admin.html` |
+
+Use a long, unique admin password. Do not add `SUPABASE_SERVICE_ROLE_KEY` or
+`ADMIN_PASSWORD` to `.env.example`, frontend code, or any `VITE_` variable.
+After setting the variables, trigger a new Netlify deploy.
+
+## Checking the setup
+
+1. Visit the normal app and submit a practice attempt.
+2. Open `/admin.html`, enter the `ADMIN_PASSWORD`, and confirm the attempt
+   appears.
+3. The admin page is intentionally not linked from the main app. Knowing its
+   URL alone does not grant access; every results request is checked by the
+   Netlify function.
+
+The password gate protects reading results. Anonymous submissions can still
+be forged by someone modifying browser requests, so treat scores as
+low-stakes training records rather than verified assessments.
