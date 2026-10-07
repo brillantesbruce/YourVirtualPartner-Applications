@@ -858,17 +858,7 @@
     var actions = el("div", { class: "results-actions" });
     var printBtn = el("button", { class: "ghost" }, [text("Print / Save Results")]);
     printBtn.addEventListener("click", function () { window.print(); });
-    var restartBtn = el("button", { class: "ghost" }, [text("New Candidate")]);
-    restartBtn.addEventListener("click", function () {
-      state.screen = "start";
-      state.candidateName = "";
-      state.current = 0;
-      state.answers = new Array(QUESTIONS.length).fill(null);
-      state.timeUsed = new Array(QUESTIONS.length).fill(0);
-      render();
-    });
     actions.appendChild(printBtn);
-    actions.appendChild(restartBtn);
     shell.appendChild(actions);
 
     app.appendChild(shell);

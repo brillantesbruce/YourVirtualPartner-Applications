@@ -1,0 +1,7 @@
+project_id = "yvp-web-apps-local"
+
+[db]
+major_version = 15
+
+[db.seed]
+enabled = false

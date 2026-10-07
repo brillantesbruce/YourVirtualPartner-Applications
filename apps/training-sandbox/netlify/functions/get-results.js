@@ -1,5 +1,5 @@
-import { timingSafeEqual } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
+const { timingSafeEqual } = require("node:crypto");
+const { createClient } = require("@supabase/supabase-js");
 
 function jsonResponse(statusCode, payload) {
   return {
@@ -19,7 +19,7 @@ function passwordsMatch(supplied, expected) {
     && timingSafeEqual(suppliedBuffer, expectedBuffer);
 }
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   if (event.httpMethod !== "GET") {
     return jsonResponse(405, { error: "Method not allowed" });
   }

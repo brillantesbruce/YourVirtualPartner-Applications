@@ -1,5 +1,54 @@
 const { createClient } = require("@supabase/supabase-js");
 
+const BOOKKEEPER_REVIEW = [
+  ["GST & BAS", 0], ["GST & BAS", 2], ["GST & BAS", 2], ["GST & BAS", 0],
+  ["STP", 0], ["STP", 1], ["STP", 1],
+  ["AP & AR", 1], ["AP & AR", 2], ["AP & AR", 1],
+  ["Bank Reconciliation", 2], ["Bank Reconciliation", 2], ["Bank Reconciliation", 0],
+  ["Financial Statements", 0], ["Financial Statements", 0], ["Financial Statements", 1],
+  ["Prepayments & Accruals", 1], ["Prepayments & Accruals", 2],
+  ["Prepayments & Accruals", 1], ["Prepayments & Accruals", 1],
+];
+
+const FPA_REVIEW = [
+  ["Client fact-find", 2], ["Client communication", 1], ["Cash-flow analysis", 1],
+  ["Superannuation scenario", 1], ["Risk profile", 2], ["Client wants to act quickly", 1],
+  ["Insurance", 1], ["Retirement planning", 1], ["Documentation", 1],
+  ["Investment review", 1], ["Diversification", 1], ["Client review preparation", 0],
+  ["Changed circumstances", 1], ["Super contributions", 1], ["Client confidentiality", 2],
+  ["Asset classes", 2], ["Implementation", 1], ["Adviser support", 1],
+  ["Client complaint", 2], ["Professional judgment", 2],
+];
+
+const PARAPLANNER_REVIEW = [
+  ["SOA preparation", 1], ["Strategy scenario", 1], ["Technical research", 1],
+  ["SOA recommendation", 0], ["Scenario: inconsistent information", 2],
+  ["Product comparison", 2], ["Retirement strategy", 1], ["Knowledge: SOA", 0],
+  ["Strategy doesn't meet objective", 1], ["Contribution strategy", 0],
+  ["Knowledge: concessional contributions", 0], ["ROA scenario", 0],
+  ["Research quality", 1], ["Investment strategy", 1], ["Document checking", 1],
+  ["Scenario: insurance", 0], ["Strategy modelling", 1],
+  ["Knowledge: diversification", 0], ["Final quality check", 1],
+  ["Scenario: adviser instruction", 1],
+];
+
+function answerReview(answers, metadata, times) {
+  if (!Array.isArray(answers)) return [];
+  const letters = ["A", "B", "C", "D"];
+  return answers.map((answer, index) => {
+    const [topic, correctIndex] = metadata[index] || [`Question ${index + 1}`, null];
+    const selectedIndex = Number.isInteger(answer) && answer >= 0 ? answer : null;
+    return {
+      number: index + 1,
+      topic,
+      candidateAnswer: selectedIndex === null ? null : letters[selectedIndex] || "Invalid",
+      correctAnswer: correctIndex === null ? null : letters[correctIndex],
+      result: selectedIndex === null ? "Unanswered" : selectedIndex === correctIndex ? "Correct" : "Incorrect",
+      timeSeconds: Array.isArray(times) && times[index] != null ? Number(times[index]) : null,
+    };
+  });
+}
+
 const appDefinitions = [
   {
     id: "broker-support-assessment",
@@ -19,7 +68,14 @@ const appDefinitions = [
         details: {
           candidate_role: row.candidate_role,
           section_scores: row.section_scores,
-          answers: row.answers,
+          answers: Array.isArray(row.answers) ? row.answers.map((answer) => ({
+            number: answer.id,
+            topic: answer.section,
+            question: answer.title,
+            candidateAnswer: answer.answer,
+            earned: Number(answer.earned),
+            points: Number(answer.points),
+          })) : [],
         },
       };
     },
@@ -44,7 +100,7 @@ const appDefinitions = [
         details: {
           score_band: row.score_band,
           time_used_seconds: row.time_used_seconds,
-          answers: row.answers,
+          answers: answerReview(row.answers, BOOKKEEPER_REVIEW, row.time_used_seconds),
         },
       };
     },
@@ -64,7 +120,10 @@ const appDefinitions = [
         percentage: Number(row.accuracy_pct),
         outcome: null,
         durationSeconds: Number(row.time_seconds),
-        details: { case_id: row.case_id },
+        details: {
+          case_id: row.case_id,
+          note: "This practice app stores only the case, score, and duration; field-by-field answers were not saved.",
+        },
       };
     },
   },
@@ -86,7 +145,7 @@ const appDefinitions = [
         details: {
           candidate_email: row.candidate_email,
           auto_submitted: row.auto_submitted,
-          answers: row.answers,
+          answers: answerReview(row.answers, FPA_REVIEW),
         },
       };
     },
@@ -111,7 +170,7 @@ const appDefinitions = [
           unanswered_count: row.unanswered_count,
           timing_mode: row.timing_mode,
           auto_submitted: row.auto_submitted,
-          answers: row.answers,
+          answers: answerReview(row.answers, PARAPLANNER_REVIEW),
         },
       };
     },

@@ -68,6 +68,62 @@ copies the static apps and compiles the Vite training sandbox into `dist/`.
 Netlify Functions require the server credentials above; never commit local
 environment files containing those values.
 
+## Local database and end-to-end testing
+
+Local development uses one local Supabase instance containing all five
+assessment tables. This is separate from every hosted Supabase project and
+does not copy or modify production data. The schema is created from
+`supabase/migrations/`.
+
+1. On Windows, install and start Docker Desktop. Supabase Local requires
+   Docker; it cannot start its database containers until Docker is running.
+2. From the repository root, start Supabase:
+
+   ```powershell
+   npm run db:start
+   ```
+
+   The first run downloads the local Supabase services and may take several
+   minutes. Apply the checked-in migration to the local database:
+
+   ```powershell
+   npm run db:reset
+   ```
+
+   This reset deletes local database data and reapplies migrations. It does
+   not reset any hosted project.
+3. Run `npx supabase status -o env` and copy its local `SERVICE_ROLE_KEY` value.
+   Replace each `replace-with-local-service-role-key` placeholder in the
+   root `.env` with that value. The local URL is
+   `http://127.0.0.1:54321`; one local URL and service-role key are shared
+   across all five apps. The `.env` file is ignored by Git. Keep its values
+   local and never use a production service-role key for local testing.
+4. In another terminal, build and start the portal from the repository root:
+
+   ```powershell
+   npm run dev
+   ```
+
+   This builds the portal and starts Netlify Dev on port 8888. Open
+   `http://localhost:8888` for the portal and
+   `http://localhost:8888/admin.html` for the admin dashboard. The local admin
+   password is set by `ADMIN_PASSWORD` in `.env`. Submit a test in an app and
+   verify it appears in the local admin dashboard. The root Netlify config
+   explicitly serves the built `dist/` site; it does not start the
+   Training Sandbox's standalone Vite development server. Its Node package
+   scope stays CommonJS so Netlify's generated function wrappers can load;
+   Vite's own config uses the `.mjs` extension to remain an ES module. The
+   launcher points Netlify to the shared root functions directory from the
+   detected Training Sandbox workspace.
+5. When finished, stop the local Supabase services with
+   `npm run db:stop`. The local database remains on your computer for next
+   time; `npm run db:start` starts it again. Stop the portal with Ctrl+C.
+
+The root `.env.example` contains safe local placeholders. The root `.env` is
+the personal working copy and is excluded by `.gitignore`; it should contain
+only local URLs and the local Supabase key. These credentials are separate
+from the production environment variables configured in Netlify.
+
 ## The app integration template
 
 For each new assessment:
@@ -88,9 +144,17 @@ For each new assessment:
    the site, then test submission and admin viewing.
 
 The shared admin fields are candidate, app, assessment, score, percentage,
-outcome, duration, and submitted time. Each app can include its own result
-details, displayed in the expandable details row. Failed/unconfigured result
-sources are reported separately rather than shown as successful empty results.
+outcome, duration, and submitted time. Expand a result to see readable,
+app-specific details and answer reviews where the app saves per-question
+answers. Training Sandbox stores summary results only, so it has no
+field-by-field review. Failed/unconfigured result sources are reported
+separately rather than shown as successful empty results.
+
+Exam results screens do not offer an in-app restart or retake button. Because
+candidate submissions are anonymous and are not tied to a verified identity,
+this is a user-interface restriction only: refreshing or reopening an exam
+still permits another submission. Enforcing one attempt per person would
+require a reliable candidate identity and a separate access/identity policy.
 
 ## Security and operational notes
 

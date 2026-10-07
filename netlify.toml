@@ -3,6 +3,11 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[dev]
+  framework = "#static"
+  publish = "dist"
+  port = 8888
+
 [build.environment]
   NODE_VERSION = "22"
 

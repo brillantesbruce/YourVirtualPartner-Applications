@@ -38,7 +38,16 @@
     tr:last-child td { border-bottom: 0; }
     .details-button { padding: 5px 8px; border: 1px solid #d6d0c3; color: #16294b; background: white; font-size: 12px; }
     .details td { background: #faf8f3; }
-    pre { max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+    .detail-summary { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 14px; font-size: 13px; }
+    .detail-summary p { margin: 0; }
+    .detail-summary strong { margin-right: 5px; }
+    .detail-heading { margin: 12px 0 7px; font-size: 14px; }
+    .review-table { min-width: 640px; border: 1px solid #e4dfd3; }
+    .review-table th { position: static; }
+    .review-table th, .review-table td { padding: 8px 10px; }
+    .verdict-correct { color: #176b3a; font-weight: 600; }
+    .verdict-incorrect { color: #a6362f; font-weight: 600; }
+    .verdict-unanswered { color: #6b7280; }
     [hidden] { display: none !important; }
     @media (max-width: 600px) {
       header { padding: 18px 16px; }
@@ -100,6 +109,111 @@
       if (seconds == null || !Number.isFinite(Number(seconds))) return "—";
       const total = Math.round(Number(seconds));
       return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+    }
+
+    function appendSummaryItem(container, label, value) {
+      if (value == null || value === "") return;
+      const item = document.createElement("p");
+      const heading = document.createElement("strong");
+      heading.textContent = `${label}:`;
+      item.append(heading, document.createTextNode(String(value)));
+      container.appendChild(item);
+    }
+
+    function renderAnswerTable(appId, answers) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-wrap";
+      const table = document.createElement("table");
+      table.className = "review-table";
+      const header = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      const broker = appId === "broker-support-assessment";
+      (broker
+        ? ["Question", "Topic", "Candidate response", "Marks"]
+        : ["Q", "Topic", "Candidate", "Correct", "Result", "Time"]
+      ).forEach((label) => {
+        const cell = document.createElement("th");
+        cell.textContent = label;
+        headerRow.appendChild(cell);
+      });
+      header.appendChild(headerRow);
+      table.appendChild(header);
+
+      const body = document.createElement("tbody");
+      answers.forEach((answer) => {
+        const row = document.createElement("tr");
+        if (broker) {
+          appendCell(row, answer.question || answer.number);
+          appendCell(row, answer.topic);
+          appendCell(row, answer.candidateAnswer);
+          appendCell(row, `${Number(answer.earned || 0).toFixed(1)} / ${Number(answer.points || 0).toFixed(1)}`);
+        } else {
+          appendCell(row, answer.number);
+          appendCell(row, answer.topic);
+          appendCell(row, answer.candidateAnswer);
+          appendCell(row, answer.correctAnswer);
+          const resultCell = appendCell(row, answer.result);
+          resultCell.className = answer.result === "Correct"
+            ? "verdict-correct"
+            : answer.result === "Unanswered" ? "verdict-unanswered" : "verdict-incorrect";
+          appendCell(row, answer.timeSeconds == null ? "—" : `${answer.timeSeconds}s`);
+        }
+        body.appendChild(row);
+      });
+      table.appendChild(body);
+      wrapper.appendChild(table);
+      return wrapper;
+    }
+
+    function renderAttemptDetails(attempt, container) {
+      const details = attempt.details || {};
+      const summary = document.createElement("div");
+      summary.className = "detail-summary";
+
+      if (attempt.appId === "broker-support-assessment") {
+        appendSummaryItem(summary, "Candidate role", details.candidate_role);
+      } else if (attempt.appId === "bookkeeper-assessment") {
+        appendSummaryItem(summary, "Score band", details.score_band);
+      } else if (attempt.appId === "training-sandbox") {
+        appendSummaryItem(summary, "Case ID", details.case_id);
+      } else if (attempt.appId === "fpa-assessment") {
+        appendSummaryItem(summary, "Candidate email", details.candidate_email);
+        appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
+      } else if (attempt.appId === "paraplanner-assessment") {
+        appendSummaryItem(summary, "Score band", details.score_band);
+        appendSummaryItem(summary, "Unanswered", details.unanswered_count);
+        appendSummaryItem(summary, "Timing mode", details.timing_mode);
+        appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
+      }
+
+      if (attempt.appId === "broker-support-assessment" && details.section_scores
+        && typeof details.section_scores === "object") {
+        const sectionScores = Object.entries(details.section_scores)
+          .map(([section, score]) => `${section}: ${score}`)
+          .join(" · ");
+        appendSummaryItem(summary, "Section scores", sectionScores);
+      }
+
+      if (summary.childElementCount) container.appendChild(summary);
+
+      if (details.note) {
+        const note = document.createElement("p");
+        note.className = "muted";
+        note.textContent = details.note;
+        container.appendChild(note);
+      }
+
+      if (Array.isArray(details.answers) && details.answers.length) {
+        const heading = document.createElement("h3");
+        heading.className = "detail-heading";
+        heading.textContent = "Answer review";
+        container.append(heading, renderAnswerTable(attempt.appId, details.answers));
+      } else if (!details.note) {
+        const note = document.createElement("p");
+        note.className = "muted";
+        note.textContent = "No answer-by-answer details were saved for this result.";
+        container.appendChild(note);
+      }
     }
 
     function render() {
@@ -196,9 +310,7 @@
         detailsRow.hidden = true;
         const details = document.createElement("td");
         details.colSpan = 8;
-        const pre = document.createElement("pre");
-        pre.textContent = JSON.stringify(attempt.details, null, 2);
-        details.appendChild(pre);
+        renderAttemptDetails(attempt, details);
         detailsRow.appendChild(details);
         detailsButton.addEventListener("click", () => {
           detailsRow.hidden = !detailsRow.hidden;
