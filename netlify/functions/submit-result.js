@@ -85,10 +85,69 @@ function validateTrainingResult(result) {
   };
 }
 
+function validateFpaResult(result) {
+  if (
+    typeof result.candidate_name !== "string" || !result.candidate_name.trim()
+    || result.candidate_name.length > 120
+    || (result.candidate_email !== null && result.candidate_email !== ""
+      && (typeof result.candidate_email !== "string" || result.candidate_email.length > 254
+        || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(result.candidate_email)))
+    || !Number.isInteger(result.score) || result.score < 0 || result.score > 20
+    || typeof result.passed !== "boolean"
+    || result.passed !== (result.score >= 16)
+    || !isNumberBetween(result.elapsed_seconds, 0, 2400)
+    || typeof result.auto_submitted !== "boolean"
+    || !Array.isArray(result.answers) || result.answers.length !== 20
+    || !result.answers.every((value) => Number.isInteger(value) && value >= -1 && value <= 3)
+  ) return null;
+
+  return {
+    candidate_name: result.candidate_name.trim(),
+    candidate_email: result.candidate_email ? result.candidate_email.trim() : null,
+    score: result.score,
+    passed: result.passed,
+    elapsed_seconds: Math.round(result.elapsed_seconds),
+    auto_submitted: result.auto_submitted,
+    answers: result.answers,
+  };
+}
+
+function validateParaplannerResult(result) {
+  if (
+    typeof result.candidate_name !== "string" || !result.candidate_name.trim()
+    || result.candidate_name.length > 120
+    || !Number.isInteger(result.score) || result.score < 0 || result.score > 20
+    || typeof result.score_band !== "string" || !result.score_band.trim() || result.score_band.length > 60
+    || typeof result.passed !== "boolean"
+    || result.passed !== (result.score >= 16)
+    || !Number.isInteger(result.unanswered_count) || result.unanswered_count < 0 || result.unanswered_count > 20
+    || !isNumberBetween(result.elapsed_seconds, 0, 2400)
+    || !["q40", "q60", "t40"].includes(result.timing_mode)
+    || typeof result.auto_submitted !== "boolean"
+    || !Array.isArray(result.answers) || result.answers.length !== 20
+    || !result.answers.every((value) => Number.isInteger(value) && value >= -1 && value <= 3)
+    || result.unanswered_count !== result.answers.filter((value) => value === -1).length
+  ) return null;
+
+  return {
+    candidate_name: result.candidate_name.trim(),
+    score: result.score,
+    score_band: result.score_band.trim(),
+    passed: result.passed,
+    unanswered_count: result.unanswered_count,
+    elapsed_seconds: Math.round(result.elapsed_seconds),
+    timing_mode: result.timing_mode,
+    auto_submitted: result.auto_submitted,
+    answers: result.answers,
+  };
+}
+
 const validators = {
   "broker-support-assessment": validateBrokerResult,
   "bookkeeper-assessment": validateBookkeeperResult,
   "training-sandbox": validateTrainingResult,
+  "fpa-assessment": validateFpaResult,
+  "paraplanner-assessment": validateParaplannerResult,
 };
 
 exports.handler = async (event) => {

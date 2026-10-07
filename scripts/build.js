@@ -30,6 +30,8 @@ fs.mkdirSync(outputDirectory, { recursive: true });
 
 copyAppFiles("broker-support-assessment", ["index.html"]);
 copyAppFiles("bookkeeper-assessment", ["index.html"]);
+copyAppFiles("FPA-assessment", ["index.html"]);
+copyAppFiles("Paraplanner-assessment", ["index.html"]);
 copyAppFiles("calculators", [
   "index.html",
   "default_calculator.html",

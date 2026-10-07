@@ -1,0 +1,399 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Paraplanner Assessment (Copy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: single centred working column; one screen at a time (start → question → results) */
+:root{
+  --bg:#eef2f1; --surface:#ffffff; --ink:#15241f; --muted:#5b6b66; --line:#d5dfdc;
+  --accent:#1f5f4e; --accent-ink:#ffffff; --accent-soft:#e1efea;
+  --good:#1d7a46; --good-soft:#e2f3e8; --warn:#a86a06; --warn-soft:#fbf0dc; --bad:#b4322a; --bad-soft:#fae4e2;
+  --display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1715; --surface:#17221f; --ink:#e4ece9; --muted:#97a8a2; --line:#2a3834;
+  --accent:#5fbf9f; --accent-ink:#0b1513; --accent-soft:#1c322b;
+  --good:#5cc98a; --good-soft:#173324; --warn:#e2a945; --warn-soft:#352915; --bad:#f0857c; --bad-soft:#3a1d1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1715; --surface:#17221f; --ink:#e4ece9; --muted:#97a8a2; --line:#2a3834;
+  --accent:#5fbf9f; --accent-ink:#0b1513; --accent-soft:#1c322b;
+  --good:#5cc98a; --good-soft:#173324; --warn:#e2a945; --warn-soft:#352915; --bad:#f0857c; --bad-soft:#3a1d1b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body);padding-inline:16px;padding-block:24px 48px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:var(--display);font-weight:650;text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(1.8rem,5vw,2.4rem);line-height:1.15}
+h2{font-size:1.35rem;line-height:1.3}
+p{margin:0}
+.eyebrow{font:600 .72rem/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:18px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fact{border-top:2px solid var(--accent);padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.fact b{font:500 1.25rem/1.2 var(--mono);font-variant-numeric:tabular-nums}
+.fact span{font-size:.8rem;color:var(--muted)}
+ul.rules{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:6px;color:var(--muted)}
+label{font-weight:600;font-size:.88rem;display:block;margin-bottom:6px}
+input[type=text],select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.btn{font:600 1rem var(--body);border:0;border-radius:8px;padding:13px 22px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.err{color:var(--bad);font-size:.88rem}
+
+/* question screen */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.qcount{font:500 .9rem var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.timer{font:500 1.05rem var(--mono);font-variant-numeric:tabular-nums;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.timer.low{background:var(--bad-soft);color:var(--bad)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .25s linear}
+.bar.time i{background:var(--muted)}
+.bar.time.low i{background:var(--bad)}
+.stem{font-size:1.08rem;display:flex;flex-direction:column;gap:10px}
+.stem .ask{font-weight:600}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:14px;align-items:flex-start;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;width:100%}
+.opt:hover{border-color:var(--accent)}
+.opt .k{font:500 .9rem var(--mono);flex:0 0 28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted)}
+.opt[aria-checked=true]{border-color:var(--accent);background:var(--accent-soft)}
+.opt[aria-checked=true] .k{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.opt span:last-child{min-width:0}
+
+/* results */
+.score{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.big{font:500 3.4rem/1 var(--mono);font-variant-numeric:tabular-nums}
+.big small{font-size:1.4rem;color:var(--muted)}
+.pill{display:inline-block;font:600 .8rem var(--body);letter-spacing:.04em;padding:5px 11px;border-radius:999px}
+.p-good{background:var(--good-soft);color:var(--good)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-acc{background:var(--accent-soft);color:var(--accent)}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;font-size:.9rem}
+.meta div{display:flex;flex-direction:column}.meta b{font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl{overflow-x:auto}
+.review{display:flex;flex-direction:column;gap:12px}
+.rv{border:1px solid var(--line);border-left:4px solid var(--good);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.rv.x{border-left-color:var(--bad)}
+.rv .t{font-weight:600}
+.rv .a{color:var(--muted)}
+.rv .a b{color:var(--ink);font-weight:600}
+.confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--warn);background:var(--warn-soft);border-radius:8px;font-size:.92rem}
+.note{font-size:.82rem;color:var(--muted)}
+@media (max-width:560px){.facts{grid-template-columns:1fr 1fr 1fr}.fields{grid-template-columns:1fr}.panel{padding:18px}.big{font-size:2.8rem}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+
+  <!-- START -->
+  <section id="start" class="wrap" style="gap:20px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span class="eyebrow">Candidate technical assessment</span>
+      <h1>Paraplanner Assessment</h1>
+      <p class="muted">SOA and ROA preparation, technical research, strategy modelling, compliance and quality checking.</p>
+    </div>
+    <div class="panel">
+      <div class="facts">
+        <div class="fact"><b>20</b><span>multiple-choice questions</span></div>
+        <div class="fact"><b id="factTime">40 sec</b><span id="factTimeLbl">per question</span></div>
+        <div class="fact"><b>16/20</b><span>pass mark (80%)</span></div>
+      </div>
+      <ul class="rules">
+        <li>Choose the best answer for each question. There is one correct answer.</li>
+        <li id="ruleTime">Each question is timed. When time runs out, the exam moves on and the question is marked unanswered.</li>
+        <li>You can't go back to a previous question once you've moved on.</li>
+        <li>Results appear as soon as you finish.</li>
+      </ul>
+      <div class="fields">
+        <div><label for="cname">Candidate name</label><input id="cname" type="text" autocomplete="off" placeholder="Full name"></div>
+        <div><label for="mode">Timing</label>
+          <select id="mode">
+            <option value="q40">40 seconds per question</option>
+            <option value="q60">60 seconds per question</option>
+            <option value="t40">40 minutes for the whole exam</option>
+          </select>
+        </div>
+      </div>
+      <div class="row"><button class="btn" id="go">Start assessment</button><span class="err" id="startErr" hidden>Enter the candidate's name to begin.</span></div>
+    </div>
+  </section>
+
+  <!-- QUESTION -->
+  <section id="quiz" class="panel" hidden>
+    <div class="qhead">
+      <span class="qcount" id="qcount">Question 1 of 20</span>
+      <span class="timer" id="timer" aria-live="off">0:40</span>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="prog" style="width:0"></i></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="eyebrow" id="qcat">SOA preparation</span>
+      <div class="stem" id="qstem"></div>
+    </div>
+    <div class="opts" id="opts" role="radiogroup"></div>
+    <div class="bar time" id="tbarWrap" aria-hidden="true"><i id="tbar" style="width:100%"></i></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" id="next" disabled>Next question</button></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="wrap" hidden>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span class="eyebrow">Paraplanner Assessment · Results</span>
+      <h1 id="rName">Candidate</h1>
+    </div>
+    <div class="panel">
+      <div class="score">
+        <div class="big" id="rScore">0<small>/20</small></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="row" style="gap:8px"><span class="pill" id="rPass">PASS</span><span class="pill" id="rBand">Excellent</span></div>
+          <p id="rBandText" class="muted"></p>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="muted">Percentage</span><b id="rPct">0%</b></div>
+        <div><span class="muted">Time taken</span><b id="rTime">0:00</b></div>
+        <div><span class="muted">Unanswered</span><b id="rUn">0</b></div>
+        <div><span class="muted">Completed</span><b id="rDate"></b></div>
+      </div>
+      <p class="note" id="saveStatus" role="status" aria-live="polite">Saving your result…</p>
+    </div>
+
+    <div class="panel">
+      <h2>Results by area</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Area</th><th>Questions</th><th>Correct</th></tr></thead>
+        <tbody id="rAreas"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <h2>Scoring guide</h2>
+      <div class="tbl"><table>
+        <tbody>
+          <tr><td class="n">18–20</td><td><span class="pill p-good">Excellent</span></td><td>Strong technical and job readiness</td></tr>
+          <tr><td class="n">16–17</td><td><span class="pill p-acc">Pass</span></td><td>Suitable, with some areas to develop</td></tr>
+          <tr><td class="n">14–15</td><td><span class="pill p-warn">Borderline</span></td><td>Requires further interview or technical assessment</td></tr>
+          <tr><td class="n">0–13</td><td><span class="pill p-bad">Below benchmark</span></td><td>Does not meet the recommended benchmark</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <h2>Answer review</h2>
+      <div class="review" id="rReview"></div>
+    </div>
+
+    <div class="panel">
+      <div class="row">
+        <button class="btn" id="copy">Copy results summary</button>
+        <button class="btn ghost" id="reset">Start a new candidate</button>
+        <span class="note" id="copyMsg" hidden></span>
+      </div>
+      <div class="confirm" id="confirm" hidden>
+        <span>Clear these results and start a new candidate? Copy the summary first if you need to keep it.</span>
+        <button class="btn" id="confirmYes">Clear and restart</button>
+        <button class="btn ghost" id="confirmNo">Cancel</button>
+      </div>
+      <textarea id="copyFallback" readonly hidden style="width:100%;min-height:200px;font:400 .85rem var(--mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px"></textarea>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const Q = [
+ {c:"SOA preparation",a:"SOA & ROA",s:"An adviser asks you to prepare an SOA for a client. The CRM contains an old fact-find from two years ago.",q:"What should you do?",o:["Use the old information because it is already in the CRM","Confirm that the client's relevant information is current and obtain updated information where required","Copy the old SOA and change the date","Prepare the SOA without client information"]},
+ {c:"Strategy scenario",a:"Strategy & modelling",s:"A client has $300,000 in cash and wants to invest it for retirement in 15 years. The client also has a mortgage and no emergency savings.",q:"Which issue should the paraplanner flag to the adviser?",o:["The client should invest the entire $300,000 immediately","The interaction between emergency liquidity, debt, investment timeframe and retirement objectives should be considered","The client should invest entirely in shares","The client should put everything into cryptocurrency"]},
+ {c:"Technical research",a:"Research",s:"An adviser asks you to determine whether a particular superannuation strategy is appropriate for a client.",q:"What is the best approach?",o:["Use an old strategy from another client","Research current legislation, product rules and authoritative sources and document the basis of the research","Search social media","Use the first Google result without checking it"]},
+ {c:"SOA recommendation",a:"SOA & ROA",s:"",q:"When preparing an SOA, the recommended strategy should:",o:["Be based on the client's relevant circumstances and objectives","Be identical for every client","Focus only on the highest investment return","Be based solely on what the adviser personally prefers"]},
+ {c:"Scenario: inconsistent information",a:"Compliance & quality",s:"The client's fact-find states that they are 55, but their driver's licence indicates they are 57.",q:"What should you do?",o:["Pick the age that produces the better strategy","Ignore the discrepancy","Verify the correct information and update the relevant records before completing the advice","Use the age from the fact-find because it was entered first"]},
+ {c:"Product comparison",a:"Research",s:"You are comparing two superannuation products for a client.",q:"Which combination of factors is most relevant?",o:["Fees only","Investment performance only","Fees, investment options, insurance, features, services, performance and suitability for the client's circumstances","Which product has the better-looking website"]},
+ {c:"Retirement strategy",a:"Strategy & modelling",s:"A client aged 65 is planning to retire and requires $70,000 per year to maintain their lifestyle.",q:"Which information is most important when modelling their retirement strategy?",o:["Their preferred colour","Assets, liabilities, superannuation, income sources, spending, life expectancy assumptions and retirement objectives","Their favourite investment website","The previous week's share market performance only"]},
+ {c:"Knowledge: SOA",a:"SOA & ROA",s:"",q:"What is the primary purpose of a Statement of Advice?",o:["To provide a record of personal financial advice and explain the relevant recommendations and implications","To guarantee investment returns","To replace all client communication","To act as a tax return"]},
+ {c:"Scenario: strategy doesn't meet objective",a:"Strategy & modelling",s:"You model a strategy and discover that the client is unlikely to achieve their retirement income objective using their current savings and contribution rate.",q:"What should you do?",o:["Change the assumptions until the result looks positive","Flag the shortfall to the adviser and investigate potential strategies or alternatives","Hide the result from the adviser","Increase assumed investment returns without justification"]},
+ {c:"Contribution strategy",a:"Strategy & modelling",s:"An adviser asks you to model additional super contributions for a client.",q:"Which information may be relevant?",o:["The client's income, existing contributions, contribution limits, available cash flow and objectives","Only the client's age","Only the client's super balance","Only the client's employer"]},
+ {c:"Knowledge: concessional contributions",a:"Technical knowledge",s:"",q:"Which is generally an example of a concessional superannuation contribution?",o:["An employer superannuation contribution","A personal contribution where no deduction is claimed","A bank transfer into a personal savings account","A mortgage repayment"]},
+ {c:"ROA scenario",a:"SOA & ROA",s:"A client previously received advice regarding their investment portfolio. The adviser now wants to make a relatively limited change to the existing strategy.",q:"What should the paraplanner consider before preparing an ROA?",o:["Whether the change is appropriate for an ROA and whether the client's relevant circumstances remain current","Whether an ROA is always shorter than an SOA","Whether the client has changed banks","Whether the previous advice can simply be deleted"]},
+ {c:"Research quality",a:"Research",s:"You find two sources with different information about a superannuation rule.",q:"What should you do?",o:["Choose the source with the answer you prefer","Use the most authoritative and current sources and escalate uncertainty where necessary","Use whichever source appears first","Combine both answers together"]},
+ {c:"Investment strategy",a:"Compliance & quality",s:"A client's risk profile indicates a moderate risk tolerance, but the proposed portfolio contains a very high allocation to growth assets.",q:"What should you do?",o:["Ignore the difference","Flag the inconsistency and check the proposed strategy against the client's risk profile and objectives","Change the client's risk profile yourself","Remove all growth assets automatically"]},
+ {c:"Document checking",a:"Compliance & quality",s:"Before an SOA is issued, you identify that the recommended product fee in the SOA does not match the current product disclosure document.",q:"What should you do?",o:["Leave it because the difference is small","Correct and verify the information before the advice is issued","Delete the fee information","Use the fee from an older version of the document"]},
+ {c:"Scenario: insurance",a:"Strategy & modelling",s:"A client has life insurance but no income protection. The adviser wants to consider whether additional insurance is appropriate.",q:"Which information would be particularly relevant?",o:["Client's income, employment, expenses, debts, dependants, existing cover and financial commitments","Only the client's age","Only the client's super balance","The client's preferred insurance company"]},
+ {c:"Strategy modelling",a:"Strategy & modelling",s:"Your modelling shows that a proposed contribution strategy would cause the client to have insufficient cash flow to meet their regular expenses.",q:"What should you do?",o:["Proceed because increasing contributions is always beneficial","Flag the cash-flow impact to the adviser and reassess the strategy","Remove the client's expenses from the model","Increase the client's projected income"]},
+ {c:"Knowledge: diversification",a:"Technical knowledge",s:"A portfolio contains 80% in shares of one company.",q:"What is the primary concern?",o:["Diversification risk/concentration risk","Excessive cash exposure","Guaranteed returns","Lack of liquidity in every circumstance"]},
+ {c:"Final quality check",a:"Compliance & quality",s:"",q:"Which is the best final check before an SOA is sent to the adviser for approval?",o:["Check only spelling","Check that client details, objectives, recommendations, calculations, fees, assumptions, disclosures and supporting information are consistent and accurate","Check only the first page","Check whether the document looks attractive"]},
+ {c:"Scenario: adviser instruction",a:"Compliance & quality",s:"An adviser asks you to model a strategy using an assumption that you believe is outdated and potentially inconsistent with current legislation.",q:"What should you do?",o:["Use it without question because the adviser asked","Raise the issue, verify the current requirements and clarify the assumption before finalising the advice","Change the assumption secretly","Delete the assumption from the advice"]}
+];
+// answer key (original option index), lightly encoded so it isn't readable at a glance
+const K = atob("MTExMDIyMTAxMDAwMTExMDEwMTE=").split("").map(Number);
+const L = ["A","B","C","D"];
+const $ = id => document.getElementById(id);
+let st = null, tick = null;
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function fmt(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function show(id){["start","quiz","results"].forEach(x=>$(x).hidden = x!==id);window.scrollTo(0,0)}
+
+function modeInfo(){
+  const m=$("mode").value;
+  if(m==="t40") return {per:null,total:2400};
+  return {per:m==="q60"?60:40,total:null};
+}
+$("mode").addEventListener("change",()=>{
+  const mi=modeInfo();
+  if(mi.per){$("factTime").textContent=mi.per+" sec";$("factTimeLbl").textContent="per question";$("ruleTime").textContent="Each question is timed. When time runs out, the exam moves on and the question is marked unanswered.";}
+  else{$("factTime").textContent="40 min";$("factTimeLbl").textContent="for the whole exam";$("ruleTime").textContent="The whole exam is timed. When time runs out, the exam ends and remaining questions are marked unanswered.";}
+});
+
+$("go").addEventListener("click",()=>{
+  const name=$("cname").value.trim();
+  if(!name){$("startErr").hidden=false;$("cname").focus();return}
+  $("startErr").hidden=true;
+  const mi=modeInfo();
+  st={name,mode:$("mode").value,per:mi.per,total:mi.total,i:0,ans:Array(20).fill(null),
+      orders:Q.map(()=>shuffle([0,1,2,3])),started:Date.now(),qStart:Date.now()};
+  show("quiz");render();startTimer();
+});
+
+function render(){
+  const q=Q[st.i],ord=st.orders[st.i];
+  $("qcount").textContent="Question "+(st.i+1)+" of 20";
+  $("prog").style.width=(st.i/20*100)+"%";
+  $("qcat").textContent=q.c;
+  $("qstem").innerHTML="";
+  if(q.s){const p=document.createElement("p");p.textContent=q.s;$("qstem").appendChild(p)}
+  const a=document.createElement("p");a.className="ask";a.textContent=q.q;$("qstem").appendChild(a);
+  const box=$("opts");box.innerHTML="";
+  ord.forEach((orig,pos)=>{
+    const b=document.createElement("button");b.className="opt";b.type="button";b.id="opt"+pos;
+    b.setAttribute("role","radio");b.setAttribute("aria-checked","false");
+    b.innerHTML='<span class="k">'+L[pos]+'</span><span></span>';
+    b.lastChild.textContent=q.o[orig];
+    b.addEventListener("click",()=>{st.ans[st.i]=orig;[...box.children].forEach(c=>c.setAttribute("aria-checked","false"));b.setAttribute("aria-checked","true");$("next").disabled=false});
+    box.appendChild(b);
+  });
+  $("next").disabled=true;
+  $("next").textContent=st.i===19?"Finish and see results":"Next question";
+  st.qStart=Date.now();
+  updTimer();
+}
+
+function remaining(){
+  const now=Date.now();
+  if(st.per) return {left:st.per-(now-st.qStart)/1000,of:st.per};
+  return {left:st.total-(now-st.started)/1000,of:st.total};
+}
+function updTimer(){
+  const r=remaining(),left=Math.max(0,r.left);
+  $("timer").textContent=fmt(Math.ceil(left));
+  const low=st.per?left<=10:left<=120;
+  $("timer").classList.toggle("low",low);$("tbarWrap").classList.toggle("low",low);
+  $("tbar").style.width=(left/r.of*100)+"%";
+  if(r.left<=0){ if(st.per) advance(); else finish(); }
+}
+function startTimer(){clearInterval(tick);tick=setInterval(updTimer,250)}
+function advance(){ if(st.i>=19){finish();return} st.i++;render(); }
+$("next").addEventListener("click",advance);
+document.addEventListener("keydown",e=>{
+  if($("quiz").hidden)return;
+  const k=e.key.toUpperCase(),p=L.indexOf(k);
+  if(p>=0){$("opt"+p)?.click()}
+  else if(e.key==="Enter"&&!$("next").disabled&&document.activeElement?.tagName!=="BUTTON"){advance()}
+});
+
+function band(s){
+  if(s>=18)return["Excellent","p-good","Strong technical and job readiness."];
+  if(s>=16)return["Pass","p-acc","Suitable, with some areas to develop."];
+  if(s>=14)return["Borderline","p-warn","Requires further interview or technical assessment."];
+  return["Below benchmark","p-bad","Does not meet the recommended benchmark."];
+}
+
+function finish(){
+  clearInterval(tick);
+  const elapsed=(Date.now()-st.started)/1000;
+  const correct=st.ans.map((a,i)=>a===K[i]);
+  const score=correct.filter(Boolean).length, un=st.ans.filter(a=>a===null).length;
+  const [bn,bc,bt]=band(score), pass=score>=16;
+  const done=new Date();
+  st.result={score,un,elapsed,correct,done,bn,pass};
+
+  $("rName").textContent=st.name;
+  $("rScore").innerHTML=score+"<small>/20</small>";
+  $("rPass").textContent=pass?"PASS":"NOT PASSED";$("rPass").className="pill "+(pass?"p-good":"p-bad");
+  $("rBand").textContent=bn;$("rBand").className="pill "+bc;
+  $("rBandText").textContent=bt;
+  $("rPct").textContent=Math.round(score/20*100)+"%";
+  $("rTime").textContent=fmt(elapsed);
+  $("rUn").textContent=un;
+  $("rDate").textContent=done.toLocaleString("en-AU",{day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit"});
+  const saveStatus=$("saveStatus");
+  saveStatus.textContent="Saving your result…";
+  fetch("/.netlify/functions/submit-result",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      app_id:"paraplanner-assessment",
+      result:{
+        candidate_name:st.name,
+        score:score,
+        score_band:bn,
+        passed:pass,
+        unanswered_count:un,
+        elapsed_seconds:elapsed,
+        timing_mode:st.mode,
+        auto_submitted:!!st.auto,
+        answers:st.ans.map(answer=>answer===null?-1:answer)
+      }
+    })
+  }).then(response=>{
+    if(!response.ok)throw new Error("Submission failed with status "+response.status);
+    saveStatus.textContent="Your result was submitted.";
+  }).catch(error=>{
+    console.error("Failed to submit Paraplanner assessment result",error);
+    saveStatus.textContent="Your result could not be submitted. Copy or save this summary and contact the assessment administrator.";
+    saveStatus.style.color="var(--bad)";
+  });
+
+  const areas={};Q.forEach((q,i)=>{areas[q.a]=areas[q.a]||[0,0];areas[q.a][0]++;if(correct[i])areas[q.a][1]++});
+  $("rAreas").innerHTML="";
+  Object.entries(areas).forEach(([k,[n,c]])=>{const tr=document.createElement("tr");tr.innerHTML='<td></td><td class="n">'+n+'</td><td class="n">'+c+' / '+n+'</td>';tr.firstChild.textContent=k;$("rAreas").appendChild(tr)});
+
+  const rv=$("rReview");rv.innerHTML="";
+  Q.forEach((q,i)=>{
+    const d=document.createElement("div");d.className="rv"+(correct[i]?"":" x");
+    const t=document.createElement("div");t.className="t";t.textContent=(i+1)+". "+q.c+(correct[i]?" · Correct":" · Incorrect");
+    const qq=document.createElement("div");qq.textContent=q.q;
+    const g=document.createElement("div");g.className="a";
+    g.innerHTML="Candidate answer: <b></b>";g.lastChild.textContent=st.ans[i]===null?"No answer (time ran out)":q.o[st.ans[i]];
+    d.append(t,qq,g);
+    if(!correct[i]){const c=document.createElement("div");c.className="a";c.innerHTML="Correct answer: <b></b>";c.lastChild.textContent=q.o[K[i]];d.appendChild(c)}
+    rv.appendChild(d);
+  });
+  show("results");
+}
+
+function summary(){
+  const r=st.result,modeTxt={q40:"40 sec per question",q60:"60 sec per question",t40:"40 min total"}[st.mode];
+  let s="PARAPLANNER ASSESSMENT RESULTS\nCandidate: "+st.name+"\nCompleted: "+$("rDate").textContent+"\nTiming: "+modeTxt+" (time taken "+fmt(r.elapsed)+")\n\nScore: "+r.score+"/20 ("+Math.round(r.score/20*100)+"%) "+(r.pass?"PASS":"NOT PASSED")+"\nRating: "+r.bn+"\nUnanswered: "+r.un+"\n\nQuestion results:\n";
+  Q.forEach((q,i)=>{s+=(i+1)+". "+q.c+": "+(r.correct[i]?"Correct":(st.ans[i]===null?"Unanswered":"Incorrect"))+"\n"});
+  return s;
+}
+$("copy").addEventListener("click",()=>{
+  const text=summary(),msg=$("copyMsg");
+  const fallback=()=>{const ta=$("copyFallback");ta.value=text;ta.hidden=false;ta.focus();ta.select();msg.textContent="Copying isn't available here. The summary is selected below; copy it manually.";msg.hidden=false};
+  try{navigator.clipboard.writeText(text).then(()=>{msg.textContent="Summary copied.";msg.hidden=false},fallback)}catch(e){fallback()}
+});
+$("reset").addEventListener("click",()=>{$("confirm").hidden=false});
+$("confirmNo").addEventListener("click",()=>{$("confirm").hidden=true});
+$("confirmYes").addEventListener("click",()=>{
+  st=null;$("confirm").hidden=true;$("copyMsg").hidden=true;$("copyFallback").hidden=true;$("cname").value="";show("start");$("cname").focus();
+});
+})();
+</script>
+
+</body></html>

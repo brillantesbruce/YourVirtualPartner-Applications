@@ -1,0 +1,317 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Financial Planner Associate Exam (Copy)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: single centred exam column; sticky header carries timer + progress; question card in the middle, navigator grid below */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#18252b; --muted:#5b6a70; --line:#d8dfdd;
+  --accent:#1f5b57; --accent-soft:#e3efed; --pass:#1d7a45; --pass-soft:#e2f3e8; --fail:#b23a2e; --fail-soft:#fbe7e4; --warn:#a56a00;
+  --f-display:"Literata",Georgia,serif; --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111a1d; --surface:#18242a; --ink:#e6eeec; --muted:#97a8ac; --line:#2c3b41;
+  --accent:#6cc0b6; --accent-soft:#1d3634; --pass:#5fcf8c; --pass-soft:#16301f; --fail:#f08a7d; --fail-soft:#3a1d19; --warn:#e3b04f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111a1d; --surface:#18242a; --ink:#e6eeec; --muted:#97a8ac; --line:#2c3b41;
+  --accent:#6cc0b6; --accent-soft:#1d3634; --pass:#5fcf8c; --pass-soft:#16301f; --fail:#f08a7d; --fail-soft:#3a1d19; --warn:#e3b04f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body)}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:24px 48px}
+h1,h2{font-family:var(--f-display);font-weight:600;text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(1.6rem,4vw,2.1rem)}
+h2{font-size:1.3rem}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fact{border-top:2px solid var(--accent);padding-top:8px}
+.fact b{display:block;font-family:var(--f-mono);font-size:1.15rem;font-variant-numeric:tabular-nums}
+.fact span{font-size:.85rem;color:var(--muted)}
+label.field{display:flex;flex-direction:column;gap:6px;font-weight:500}
+input[type=text],input[type=email]{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible,.opt:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:6px;padding:10px 18px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.rules{margin:0;padding-left:20px;color:var(--muted)}
+.rules li+li{margin-top:4px}
+.err{color:var(--fail);font-size:.9rem;min-height:1.2em}
+
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-bottom:20px}
+.bar-in{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar-in .who{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1.05rem;padding:4px 10px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.timer.low{background:var(--fail-soft);color:var(--fail)}
+.progress{height:3px;background:var(--line)}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.qnum{font-family:var(--f-mono);color:var(--muted);font-size:.9rem}
+.prompt{white-space:pre-line;margin:0}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--surface)}
+.opt:hover{border-color:var(--accent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .key{flex:none;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:.85rem;color:var(--muted)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel .key{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.nav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.grid button{padding:6px 0;font-family:var(--f-mono);font-size:.85rem;font-weight:500}
+.grid button.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.grid button.cur{outline:2px solid var(--ink);outline-offset:1px}
+.confirm{border:1px solid var(--warn);background:var(--surface);border-radius:8px;padding:16px}
+.confirm p{margin:0 0 12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+
+.verdict{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.score{font-family:var(--f-mono);font-size:2.6rem;font-variant-numeric:tabular-nums;line-height:1}
+.score small{font-size:1.1rem;color:var(--muted)}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:600;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase}
+.pill.pass{background:var(--pass-soft);color:var(--pass)}
+.pill.fail{background:var(--fail-soft);color:var(--fail)}
+.meta{color:var(--muted);font-size:.9rem}
+.review{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.ritem{padding:14px 16px;border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.ritem:first-child{border-top:0}
+.ritem .mark{font-family:var(--f-mono);font-weight:600;width:2.2em}
+.ritem.ok .mark{color:var(--pass)} .ritem.no .mark{color:var(--fail)}
+.ritem .t{font-weight:600;min-width:0}
+.ritem .a{grid-column:2;font-size:.9rem;color:var(--muted);min-width:0}
+.ritem .a b{color:var(--ink);font-weight:500}
+@media (max-width:520px){.facts{grid-template-columns:1fr}.grid{grid-template-columns:repeat(5,1fr)}.panel{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="bar" id="bar" hidden>
+  <div class="bar-in">
+    <span class="who" id="barWho"></span>
+    <span class="meta" id="barCount"></span>
+    <span class="timer" id="timer" aria-live="off">40:00</span>
+  </div>
+  <div class="progress"><i id="prog"></i></div>
+</header>
+
+<main class="wrap">
+
+<section id="start" class="stack">
+  <div class="stack" style="gap:6px">
+    <span class="eyebrow">Candidate assessment · Exam 1</span>
+    <h1>Financial Planner Associate</h1>
+  </div>
+  <div class="facts">
+    <div class="fact"><b>20</b><span>multiple-choice questions</span></div>
+    <div class="fact"><b>40 min</b><span>time limit</span></div>
+    <div class="fact"><b>16 / 20</b><span>pass mark (80%)</span></div>
+  </div>
+  <form class="panel stack" id="startForm" novalidate>
+    <label class="field" for="cname">Full name
+      <input type="text" id="cname" autocomplete="name" placeholder="e.g. Jordan Lee">
+    </label>
+    <label class="field" for="cemail">Email (optional)
+      <input type="email" id="cemail" autocomplete="email" placeholder="you@example.com">
+    </label>
+    <ul class="rules">
+      <li>Choose the single best answer for each question.</li>
+      <li>You can move between questions and change answers until you submit.</li>
+      <li>The timer starts when you press Start. When it reaches zero, the exam submits automatically.</li>
+      <li>Unanswered questions are marked incorrect.</li>
+    </ul>
+    <div class="err" id="startErr"></div>
+    <div><button class="primary" type="submit" id="startBtn">Start exam</button></div>
+  </form>
+</section>
+
+<section id="exam" class="stack" hidden>
+  <article class="panel stack" id="qCard" aria-live="polite">
+    <div class="qhead">
+      <span class="eyebrow" id="qTopic"></span>
+      <span class="qnum" id="qNum"></span>
+    </div>
+    <p class="prompt" id="qPrompt"></p>
+    <div class="opts" id="qOpts" role="radiogroup"></div>
+  </article>
+  <div class="nav">
+    <button type="button" id="prevBtn">← Previous</button>
+    <div class="row">
+      <button type="button" id="nextBtn" class="primary">Next →</button>
+      <button type="button" id="finishBtn">Submit exam</button>
+    </div>
+  </div>
+  <div class="confirm" id="confirm" hidden>
+    <p id="confirmText"></p>
+    <div class="row">
+      <button type="button" class="primary" id="confirmYes">Submit now</button>
+      <button type="button" id="confirmNo">Keep working</button>
+    </div>
+  </div>
+  <div class="stack" style="gap:8px">
+    <span class="eyebrow">Jump to question</span>
+    <div class="grid" id="qGrid"></div>
+  </div>
+</section>
+
+<section id="result" class="stack" hidden>
+  <div class="stack" style="gap:6px">
+    <span class="eyebrow">Result · Financial Planner Associate</span>
+    <h1 id="rName"></h1>
+    <span class="meta" id="rMeta"></span>
+  </div>
+  <div class="panel verdict">
+    <div class="score" id="rScore"></div>
+    <div class="stack" style="gap:6px">
+      <span class="pill" id="rPill"></span>
+      <span class="meta" id="rPct"></span>
+    </div>
+  </div>
+  <p class="meta" id="saveStatus" role="status" aria-live="polite"></p>
+  <div class="row">
+    <button type="button" class="primary" id="copyBtn">Copy result summary</button>
+    <span class="meta" id="copyMsg" style="align-self:center"></span>
+  </div>
+  <textarea id="copyFallback" hidden readonly style="width:100%;min-height:160px;font:13px var(--f-mono);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px"></textarea>
+  <h2>Answer review</h2>
+  <div class="review" id="rList"></div>
+</section>
+
+</main>
+
+<script>
+const Q=[
+{t:"Client fact-find",p:"A new client says they want to retire in 10 years but have not provided details of their existing superannuation, investments, debts or living expenses. What should you do first?",o:["Recommend an investment portfolio based on their age","Ask the client to transfer their super immediately","Obtain sufficient information about their financial position, objectives and circumstances before making recommendations","Recommend they increase their contributions to super"],a:2},
+{t:"Client communication",p:"A client emails asking, \"Should I move my super fund to the fund you normally recommend to clients?\"\n\nWhat is the most appropriate response from a Financial Planner Associate?",o:["Tell them which fund you recommend and ask them to transfer it","Explain that the recommendation needs to consider their individual circumstances and refer the matter to the adviser","Tell them to choose whichever fund has the highest recent return","Tell them to move because the firm's preferred fund is always suitable"],a:1},
+{t:"Cash-flow analysis",p:"A client earns $120,000 per year but their bank statements show that they consistently spend approximately $10,500 per month. They have no significant savings.\n\nWhat should the associate identify as a key issue?",o:["Their income is too low to invest","Their spending appears to exceed their after-tax income and requires further investigation","They should immediately purchase an investment property","They should increase their credit card limit"],a:1},
+{t:"Superannuation scenario",p:"A 45-year-old client has two super accounts with different insurance policies attached. The client wants to consolidate them.\n\nWhat should happen before recommending consolidation?",o:["Automatically consolidate the smaller account","Check fees, investment options, insurance, benefits and any other relevant consequences","Consolidate whichever account has performed worse","Close both accounts and open a new one"],a:1},
+{t:"Risk profile",p:"A client initially describes themselves as comfortable with investment risk. During the discussion, however, they become extremely concerned when shown that their portfolio could temporarily fall by 15%.\n\nWhat should the associate do?",o:["Ignore the concern because the client initially selected high risk","Increase the client's exposure to growth assets","Flag the inconsistency and ensure the client's risk tolerance is properly assessed","Tell the client that market falls are unavoidable"],a:2},
+{t:"Scenario — client wants to act quickly",p:"A client says, \"I don't care about the details. Just put my money into the investment you think is best.\"\n\nWhat is the most appropriate response?",o:["Proceed because the client has given verbal authority","Explain that recommendations need to be based on their circumstances and properly documented before implementation","Invest in the firm's most popular investment","Ask the client to sign a blank authority"],a:1},
+{t:"Insurance",p:"A client has income protection insurance through superannuation. During the review, they say they are unsure what happens if they become unable to work.\n\nWhat should the associate do?",o:["Tell them the policy will definitely pay their full salary","Review the policy details and refer specific advice questions to the adviser","Tell them they do not need insurance because they have super","Recommend cancelling the policy"],a:1},
+{t:"Retirement planning",p:"A couple aged 62 wants to retire within three years. They have $1.2 million in super and significant annual living expenses.\n\nWhich information would be particularly important when preparing for the adviser?",o:["Their favourite investment type","Their expected retirement spending, income needs, super balances, assets, liabilities and retirement objectives","Their preferred bank","The share market's performance yesterday"],a:1},
+{t:"Documentation",p:"You discover that an important client conversation occurred by phone but there is no record of the discussion in the CRM.\n\nWhat should you do?",o:["Leave it because verbal conversations do not need to be recorded","Create an appropriate file note documenting the relevant discussion as soon as practicable","Delete the client's previous notes","Ask the client to remember what was discussed"],a:1},
+{t:"Investment review",p:"A client complains that their portfolio has fallen over the last six months.\n\nWhat is the best initial approach?",o:["Immediately sell all investments","Explain that investment performance should be considered against the client's objectives, timeframe, risk profile and portfolio strategy","Tell them markets always go up eventually","Move everything into cash without discussion"],a:1},
+{t:"Knowledge — diversification",p:"Which statement best describes diversification?",o:["Investing everything in the highest-performing asset","Spreading investments across different assets and/or investments to reduce concentration risk","Investing only in Australian shares","Holding only cash"],a:1},
+{t:"Client review preparation",p:"Before an annual review meeting, which task would be most valuable for a Financial Planner Associate?",o:["Reviewing the client's previous advice, current information, portfolio, objectives and outstanding actions","Preparing a generic investment recommendation","Changing investments before the meeting","Sending the client another firm's financial plan"],a:0},
+{t:"Scenario — changed circumstances",p:"A client previously advised that they had no dependants. During a review, they mention that their daughter has moved back home and they now financially support her.\n\nWhat should the associate do?",o:["Ignore it because it is unrelated to financial planning","Update the client's relevant information and flag the change for the adviser","Automatically increase their life insurance","Cancel their existing insurance"],a:1},
+{t:"Super contributions",p:"A client asks whether they can make additional contributions to super and receive a tax benefit.\n\nWhat should the associate do?",o:["Guarantee that all additional contributions will be tax deductible","Obtain the relevant details and refer the specific tax/advice issue to the adviser","Tell them to contribute as much as possible","Tell them super contributions are never tax deductible"],a:1},
+{t:"Client confidentiality",p:"You receive a request from a client's adult child asking for information about the client's investments.\n\nThe client has not authorised the child to receive information.\n\nWhat should you do?",o:["Provide the information because they are family","Provide only the investment balances","Follow the firm's privacy and authority procedures before releasing any information","Send the entire client file"],a:2},
+{t:"Knowledge — asset classes",p:"Which of the following is generally considered a defensive asset?",o:["Australian shares","International shares","Cash","Listed property"],a:2},
+{t:"Scenario — implementation",p:"A client has approved an investment recommendation. Before processing the transaction, you notice the client's bank account details in the system appear different from those previously provided.\n\nWhat should you do?",o:["Process the transaction because the client approved it","Verify the details using the firm's approved verification process before proceeding","Use the new details without checking","Ask another client whether the details look correct"],a:1},
+{t:"Adviser support",p:"Which task is most appropriate for a Financial Planner Associate?",o:["Providing unapproved personal financial advice to clients","Preparing client information, assisting with reviews and implementation, maintaining records and supporting the adviser within their authorised role","Changing client investments without authority","Guaranteeing investment returns"],a:1},
+{t:"Scenario — client complaint",p:"A client says they are unhappy because their portfolio has underperformed and they want to make a formal complaint.\n\nWhat should you do?",o:["Tell them they have no reason to complain","Attempt to hide the complaint from the adviser","Follow the firm's complaints procedure and escalate/report the complaint appropriately","Delete the client's portfolio history"],a:2},
+{t:"Professional judgment",p:"You are asked by an adviser to prepare paperwork based on information in the CRM. You notice that some of the information appears inconsistent with documents recently supplied by the client.\n\nWhat should you do?",o:["Use the old information because it is already in the CRM","Guess which information is correct","Raise the discrepancy and confirm the correct information before proceeding","Remove both sets of information"],a:2}
+];
+const LIMIT=40*60, PASS=16, L="ABCD";
+const $=id=>document.getElementById(id);
+let S={name:"",email:"",cur:0,ans:Array(Q.length).fill(null),start:0,end:0,timer:null,auto:false};
+
+$("startForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const n=$("cname").value.trim();
+  if(!n){$("startErr").textContent="Enter your full name to start.";$("cname").focus();return}
+  S.name=n;S.email=$("cemail").value.trim();S.start=Date.now();
+  $("start").hidden=true;$("exam").hidden=false;$("bar").hidden=false;
+  $("barWho").textContent=n;
+  buildGrid();render();tick();S.timer=setInterval(tick,500);
+});
+
+function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function tick(){
+  const left=LIMIT-(Date.now()-S.start)/1000;
+  $("timer").textContent=fmt(left);
+  $("timer").classList.toggle("low",left<=300);
+  if(left<=0){S.auto=true;finish()}
+}
+function buildGrid(){
+  const g=$("qGrid");g.innerHTML="";
+  Q.forEach((_,i)=>{const b=document.createElement("button");b.type="button";b.id="g"+i;b.textContent=i+1;b.setAttribute("aria-label","Question "+(i+1));b.onclick=()=>{S.cur=i;render()};g.appendChild(b)});
+}
+function render(){
+  const i=S.cur,q=Q[i];
+  $("qTopic").textContent=q.t;
+  $("qNum").textContent="Question "+(i+1)+" of "+Q.length;
+  $("qPrompt").textContent=q.p;
+  const box=$("qOpts");box.innerHTML="";
+  q.o.forEach((txt,k)=>{
+    const lab=document.createElement("label");lab.className="opt"+(S.ans[i]===k?" sel":"");
+    const inp=document.createElement("input");inp.type="radio";inp.name="q"+i;inp.id="q"+i+"o"+k;inp.checked=S.ans[i]===k;
+    inp.onchange=()=>{S.ans[i]=k;render()};
+    const key=document.createElement("span");key.className="key";key.textContent=L[k];
+    const s=document.createElement("span");s.textContent=txt;
+    lab.append(inp,key,s);box.appendChild(lab);
+  });
+  $("prevBtn").disabled=i===0;
+  $("nextBtn").hidden=i===Q.length-1;
+  const done=S.ans.filter(a=>a!==null).length;
+  $("barCount").textContent=done+"/"+Q.length+" answered";
+  $("prog").style.width=(done/Q.length*100)+"%";
+  Q.forEach((_,j)=>{const b=$("g"+j);b.classList.toggle("done",S.ans[j]!==null);b.classList.toggle("cur",j===i)});
+  $("confirm").hidden=true;
+}
+$("prevBtn").onclick=()=>{if(S.cur>0){S.cur--;render()}};
+$("nextBtn").onclick=()=>{if(S.cur<Q.length-1){S.cur++;render()}};
+$("finishBtn").onclick=()=>{
+  const left=S.ans.filter(a=>a===null).length;
+  $("confirmText").textContent=left?`You have ${left} unanswered question${left>1?"s":""}. Unanswered questions are marked incorrect. Submit anyway?`:"All questions answered. Submit your exam? You can't change answers after this.";
+  $("confirm").hidden=false;$("confirmYes").focus();
+};
+$("confirmNo").onclick=()=>{$("confirm").hidden=true};
+$("confirmYes").onclick=finish;
+
+function finish(){
+  if(S.end)return;
+  clearInterval(S.timer);S.end=Date.now();
+  const score=S.ans.reduce((n,a,i)=>n+(a===Q[i].a?1:0),0);
+  const passed=score>=PASS, used=Math.min(LIMIT,(S.end-S.start)/1000);
+  $("exam").hidden=true;$("bar").hidden=true;$("result").hidden=false;
+  $("rName").textContent=S.name;
+  const when=new Date(S.end).toLocaleString("en-AU",{dateStyle:"medium",timeStyle:"short"});
+  $("rMeta").textContent=[S.email,"Completed "+when,"Time used "+fmt(used)+(S.auto?" (time expired)":"")].filter(Boolean).join(" · ");
+  $("rScore").innerHTML=score+"<small> / "+Q.length+"</small>";
+  const p=$("rPill");p.textContent=passed?"Pass":"Not passed";p.className="pill "+(passed?"pass":"fail");
+  $("rPct").textContent=Math.round(score/Q.length*100)+"% · pass mark "+PASS+"/"+Q.length;
+  const list=$("rList");list.innerHTML="";
+  Q.forEach((q,i)=>{
+    const a=S.ans[i],ok=a===q.a;
+    const d=document.createElement("div");d.className="ritem "+(ok?"ok":"no");
+    const m=document.createElement("span");m.className="mark";m.textContent=ok?"✓":"✗";
+    const t=document.createElement("span");t.className="t";t.textContent=(i+1)+". "+q.t;
+    const x=document.createElement("span");x.className="a";
+    x.innerHTML=ok?`Answered <b>${L[a]}</b>`:`Answered <b>${a===null?"—":L[a]}</b> · Correct <b>${L[q.a]}</b>: `;
+    if(!ok)x.append(document.createTextNode(q.o[q.a]));
+    d.append(m,t,x);list.appendChild(d);
+  });
+  S.summary=[`Financial Planner Associate — Exam 1`,`Candidate: ${S.name}`+(S.email?` <${S.email}>`:""),`Completed: ${when}`,`Time used: ${fmt(used)}${S.auto?" (time expired)":""}`,`Score: ${score}/${Q.length} (${Math.round(score/Q.length*100)}%) — ${passed?"PASS":"NOT PASSED"}`,``,`Responses:`,
+    ...Q.map((q,i)=>`${String(i+1).padStart(2)}. ${S.ans[i]===null?"—":L[S.ans[i]]} ${S.ans[i]===q.a?"✓":"✗ (correct "+L[q.a]+")"}`)].join("\n");
+  const saveStatus=$("saveStatus");
+  saveStatus.textContent="Saving your result…";
+  fetch("/.netlify/functions/submit-result",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      app_id:"fpa-assessment",
+      result:{
+        candidate_name:S.name,
+        candidate_email:S.email,
+        score:score,
+        passed:passed,
+        elapsed_seconds:used,
+        auto_submitted:S.auto,
+        answers:S.ans.map(a=>a===null?-1:a)
+      }
+    })
+  }).then(response=>{
+    if(!response.ok)throw new Error("Submission failed with status "+response.status);
+    saveStatus.textContent="Your result was submitted.";
+  }).catch(error=>{
+    console.error("Failed to submit FPA assessment result",error);
+    saveStatus.textContent="Your result could not be submitted. Copy or save this summary and contact the assessment administrator.";
+    saveStatus.style.color="var(--fail)";
+  });
+  window.scrollTo(0,0);
+}
+$("copyBtn").onclick=()=>{
+  const fb=()=>{const ta=$("copyFallback");ta.value=S.summary;ta.hidden=false;ta.focus();ta.select();$("copyMsg").textContent="Select and copy the text below."};
+  try{navigator.clipboard.writeText(S.summary).then(()=>{$("copyMsg").textContent="Copied to clipboard."},fb)}catch(e){fb()}
+};
+</script>
+
+</body></html>

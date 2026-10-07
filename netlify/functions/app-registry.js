@@ -68,6 +68,54 @@ const appDefinitions = [
       };
     },
   },
+  {
+    id: "fpa-assessment",
+    name: "Financial Planner Associate Exam",
+    table: "fpa_assessment_submissions",
+    urlVariable: "FPA_ASSESSMENT_SUPABASE_URL",
+    keyVariable: "FPA_ASSESSMENT_SUPABASE_SERVICE_ROLE_KEY",
+    select: "id, candidate_name, candidate_email, score, passed, elapsed_seconds, auto_submitted, answers, submitted_at",
+    normalize(row) {
+      return {
+        candidate: row.candidate_name,
+        assessment: "Financial Planner Associate Exam",
+        score: `${row.score} / 20`,
+        percentage: Number(row.score) * 5,
+        outcome: row.passed ? "Pass" : "Not passed",
+        durationSeconds: Number(row.elapsed_seconds),
+        details: {
+          candidate_email: row.candidate_email,
+          auto_submitted: row.auto_submitted,
+          answers: row.answers,
+        },
+      };
+    },
+  },
+  {
+    id: "paraplanner-assessment",
+    name: "Paraplanner Assessment",
+    table: "paraplanner_assessment_submissions",
+    urlVariable: "PARAPLANNER_ASSESSMENT_SUPABASE_URL",
+    keyVariable: "PARAPLANNER_ASSESSMENT_SUPABASE_SERVICE_ROLE_KEY",
+    select: "id, candidate_name, score, score_band, passed, unanswered_count, elapsed_seconds, timing_mode, auto_submitted, answers, submitted_at",
+    normalize(row) {
+      return {
+        candidate: row.candidate_name,
+        assessment: "Paraplanner Assessment",
+        score: `${row.score} / 20`,
+        percentage: Number(row.score) * 5,
+        outcome: row.passed ? "Pass" : "Not passed",
+        durationSeconds: Number(row.elapsed_seconds),
+        details: {
+          score_band: row.score_band,
+          unanswered_count: row.unanswered_count,
+          timing_mode: row.timing_mode,
+          auto_submitted: row.auto_submitted,
+          answers: row.answers,
+        },
+      };
+    },
+  },
 ];
 
 function createAppClient(definition) {
