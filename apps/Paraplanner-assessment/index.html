@@ -111,7 +111,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowra
         <li>Results appear as soon as you finish.</li>
       </ul>
       <div class="fields">
-        <div><label for="cname">Candidate name</label><input id="cname" type="text" autocomplete="off" placeholder="Full name"></div>
+        <div><label for="cname">Candidate name</label><input id="cname" type="text" maxlength="120" autocomplete="name" placeholder="Full name" required></div>
         <div><label for="mode">Timing</label>
           <select id="mode">
             <option value="q40">40 seconds per question</option>
@@ -198,6 +198,7 @@ td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowra
   </section>
 </div>
 
+<script src="/attempt-session.js"></script>
 <script>
 (function(){
 const Q = [
@@ -248,10 +249,18 @@ $("go").addEventListener("click",()=>{
   if(!name){$("startErr").hidden=false;$("cname").focus();return}
   $("startErr").hidden=true;
   const mi=modeInfo();
-  st={name,mode:$("mode").value,per:mi.per,total:mi.total,i:0,ans:Array(20).fill(null),
+  const sessionId=YVPAttemptSession.start("paraplanner-assessment");
+  if(!sessionId){$("startErr").hidden=false;$("startErr").textContent="You have already used your attempt for this assessment.";$("go").disabled=true;return}
+  st={name,sessionId,mode:$("mode").value,per:mi.per,total:mi.total,i:0,ans:Array(20).fill(null),
       orders:Q.map(()=>shuffle([0,1,2,3])),started:Date.now(),qStart:Date.now()};
   show("quiz");render();startTimer();
 });
+if(YVPAttemptSession.hasStarted("paraplanner-assessment")){
+  $("cname").disabled=true;
+  $("go").disabled=true;
+  $("startErr").hidden=false;
+  $("startErr").textContent="You have already used your attempt for this assessment.";
+}
 
 function render(){
   const q=Q[st.i],ord=st.orders[st.i];
@@ -333,6 +342,7 @@ function finish(){
       app_id:"paraplanner-assessment",
       result:{
         candidate_name:st.name,
+        session_id:st.sessionId,
         score:score,
         score_band:bn,
         passed:pass,
@@ -344,11 +354,14 @@ function finish(){
       }
     })
   }).then(response=>{
+    if(response.status===409)throw new Error("You have already submitted an assessment.");
     if(!response.ok)throw new Error("Submission failed with status "+response.status);
     saveStatus.textContent="Your result was submitted.";
   }).catch(error=>{
     console.error("Failed to submit Paraplanner assessment result",error);
-    saveStatus.textContent="Your result could not be submitted. Copy or save this summary and contact the assessment administrator.";
+    saveStatus.textContent=error.message==="You have already submitted an assessment."
+      ? error.message
+      : "Your result could not be submitted. Copy or save this summary and contact the assessment administrator.";
     saveStatus.style.color="var(--bad)";
   });
 

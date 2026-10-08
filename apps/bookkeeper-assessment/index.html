@@ -432,6 +432,7 @@
 <body>
 <div id="app"></div>
 
+<script src="/attempt-session.js"></script>
 <script>
 (function () {
   "use strict";
@@ -550,7 +551,8 @@
     timeUsed: new Array(QUESTIONS.length).fill(0),
     timeLeft: SECONDS_PER_Q,
     timerId: null,
-    locked: false
+    locked: false,
+    sessionId: null
   };
 
   var app = document.getElementById("app");
@@ -580,6 +582,7 @@
         app_id: "bookkeeper-assessment",
         result: {
           candidate_name: state.candidateName,
+          session_id: state.sessionId,
           score: score,
           score_band: band.label,
           answers: state.answers.map(function (answer) { return answer === null ? -1 : answer; }),
@@ -587,6 +590,7 @@
         }
       })
     }).then(function (response) {
+      if (response.status === 409) throw new Error("You have already submitted an assessment.");
       if (!response.ok) throw new Error("Submission request failed.");
     });
   }
@@ -622,8 +626,13 @@
 
     var label = el("label", { class: "field-label", for: "candidateName" }, [text("Candidate name")]);
     var input = el("input", { type: "text", id: "candidateName", placeholder: "Enter your name" });
+    input.required = true;
+    input.maxLength = 120;
+    input.autocomplete = "name";
     card.appendChild(label);
     card.appendChild(input);
+    var startMessage = el("p", { class: "subtitle", role: "alert" });
+    card.appendChild(startMessage);
 
     var ul = el("ul", { class: "instructions" });
     [
@@ -636,7 +645,19 @@
 
     var startBtn = el("button", { class: "primary" }, [text("Begin Assessment")]);
     startBtn.addEventListener("click", function () {
-      state.candidateName = input.value.trim() || "Candidate";
+      state.candidateName = input.value.trim();
+      if (!state.candidateName) {
+        input.setCustomValidity("Enter your name to begin.");
+        input.reportValidity();
+        input.addEventListener("input", function () { input.setCustomValidity(""); }, { once: true });
+        return;
+      }
+      state.sessionId = window.YVPAttemptSession.start("bookkeeper-assessment");
+      if (!state.sessionId) {
+        startMessage.textContent = "You have already used your attempt for this assessment.";
+        startBtn.disabled = true;
+        return;
+      }
       state.current = 0;
       state.answers = new Array(QUESTIONS.length).fill(null);
       state.timeUsed = new Array(QUESTIONS.length).fill(0);
@@ -644,6 +665,11 @@
       render();
       startQuestionTimer();
     });
+    if (window.YVPAttemptSession.hasStarted("bookkeeper-assessment")) {
+      input.disabled = true;
+      startBtn.disabled = true;
+      startMessage.textContent = "You have already used your attempt for this assessment.";
+    }
     card.appendChild(startBtn);
 
     shell.appendChild(card);
@@ -803,7 +829,9 @@
       submissionStatus.textContent = "Result submitted for interviewer review.";
     }).catch(function (error) {
       console.error("Assessment submission failed:", error);
-      submissionStatus.textContent = "Result could not be submitted. Use Print / Save Results to keep a copy.";
+      submissionStatus.textContent = error.message === "You have already submitted an assessment."
+        ? error.message
+        : "Result could not be submitted. Use Print / Save Results to keep a copy.";
       submissionStatus.style.color = "var(--red)";
     });
 

@@ -59,7 +59,8 @@ connect using server-only service-role keys.
 5. Deploy. The public landing page links to the apps. The admin dashboard is
    available at `/admin.html` and is not linked publicly.
 6. Submit a test result in each app and verify it appears under the correct
-   source in `/admin.html`.
+   source in `/admin.html`. Before deploying the session lock, run the
+   app-specific SQL migration below in each hosted Supabase project.
 
 ## Local build
 
@@ -84,14 +85,15 @@ does not copy or modify production data. The schema is created from
    ```
 
    The first run downloads the local Supabase services and may take several
-   minutes. Apply the checked-in migration to the local database:
+   minutes. Apply any pending checked-in migrations to the local database:
 
    ```powershell
-   npm run db:reset
+   npm run db:migrate
    ```
 
-   This reset deletes local database data and reapplies migrations. It does
-   not reset any hosted project.
+   This applies new migrations without deleting existing local test results.
+   Use `npm run db:reset` only if you intentionally want to clear local data
+   and recreate the database from scratch.
 3. Run `npx supabase status -o env` and copy its local `SERVICE_ROLE_KEY` value.
    Replace each `replace-with-local-service-role-key` placeholder in the
    root `.env` with that value. The local URL is
@@ -123,6 +125,41 @@ The root `.env.example` contains safe local placeholders. The root `.env` is
 the personal working copy and is excluded by `.gitignore`; it should contain
 only local URLs and the local Supabase key. These credentials are separate
 from the production environment variables configured in Netlify.
+
+## Candidate names and one submission per browser session
+
+Every assessment, including Training Sandbox, requires a candidate name.
+Each browser tab session gets a random session ID. Starting an app marks that
+app as started in `sessionStorage`; refreshing that tab will not let it start
+the same app again. The server also inserts the session ID into the app's
+result table, where a unique index prevents a second submission for that app
+and browser session. A browser session may still submit once to each separate
+app.
+
+This is a session-level guard, not identity verification: opening a new
+browser session, using another browser/device, or clearing browser data
+creates a different session ID and can permit another attempt. It is not a
+substitute for authenticated candidate accounts if attempts must be limited
+across sessions or devices.
+
+For each app's hosted Supabase project, run its SQL migration in the Supabase
+SQL Editor before deploying:
+
+| App | SQL migration to run |
+| --- | --- |
+| Broker Support | `apps/broker-support-assessment/supabase/session-lock-migration.sql` |
+| Bookkeeper | `apps/bookkeeper-assessment/supabase/session-lock-migration.sql` |
+| Training Sandbox | `apps/training-sandbox/supabase/session-lock-migration.sql` |
+| FPA | `apps/FPA-assessment/supabase/session-lock-migration.sql` |
+| Paraplanner | `apps/Paraplanner-assessment/supabase/session-lock-migration.sql` |
+
+Each migration safely adds and backfills the session ID on existing rows
+before making it required and unique. Local Supabase applies the combined
+migration in `supabase/migrations/` with `npm run db:migrate`.
+
+The central admin page supports case-insensitive search by candidate name,
+app name, or assessment name, across the submissions currently loaded in
+the dashboard.
 
 ## The app integration template
 

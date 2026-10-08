@@ -106,7 +106,7 @@ header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
   </div>
   <form class="panel stack" id="startForm" novalidate>
     <label class="field" for="cname">Full name
-      <input type="text" id="cname" autocomplete="name" placeholder="e.g. Jordan Lee">
+      <input type="text" id="cname" autocomplete="name" maxlength="120" required placeholder="e.g. Jordan Lee">
     </label>
     <label class="field" for="cemail">Email (optional)
       <input type="email" id="cemail" autocomplete="email" placeholder="you@example.com">
@@ -176,6 +176,7 @@ header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 
 </main>
 
+<script src="/attempt-session.js"></script>
 <script>
 const Q=[
 {t:"Client fact-find",p:"A new client says they want to retire in 10 years but have not provided details of their existing superannuation, investments, debts or living expenses. What should you do first?",o:["Recommend an investment portfolio based on their age","Ask the client to transfer their super immediately","Obtain sufficient information about their financial position, objectives and circumstances before making recommendations","Recommend they increase their contributions to super"],a:2},
@@ -201,17 +202,24 @@ const Q=[
 ];
 const LIMIT=40*60, PASS=16, L="ABCD";
 const $=id=>document.getElementById(id);
-let S={name:"",email:"",cur:0,ans:Array(Q.length).fill(null),start:0,end:0,timer:null,auto:false};
+let S={name:"",email:"",sessionId:null,cur:0,ans:Array(Q.length).fill(null),start:0,end:0,timer:null,auto:false};
 
 $("startForm").addEventListener("submit",e=>{
   e.preventDefault();
   const n=$("cname").value.trim();
   if(!n){$("startErr").textContent="Enter your full name to start.";$("cname").focus();return}
+  S.sessionId=YVPAttemptSession.start("fpa-assessment");
+  if(!S.sessionId){$("startErr").textContent="You have already used your attempt for this assessment.";$("startBtn").disabled=true;return}
   S.name=n;S.email=$("cemail").value.trim();S.start=Date.now();
   $("start").hidden=true;$("exam").hidden=false;$("bar").hidden=false;
   $("barWho").textContent=n;
   buildGrid();render();tick();S.timer=setInterval(tick,500);
 });
+if(YVPAttemptSession.hasStarted("fpa-assessment")){
+  $("cname").disabled=true;
+  $("startBtn").disabled=true;
+  $("startErr").textContent="You have already used your attempt for this assessment.";
+}
 
 function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
 function tick(){
@@ -290,6 +298,7 @@ function finish(){
       app_id:"fpa-assessment",
       result:{
         candidate_name:S.name,
+        session_id:S.sessionId,
         candidate_email:S.email,
         score:score,
         passed:passed,
@@ -299,11 +308,14 @@ function finish(){
       }
     })
   }).then(response=>{
+    if(response.status===409)throw new Error("You have already submitted an assessment.");
     if(!response.ok)throw new Error("Submission failed with status "+response.status);
     saveStatus.textContent="Your result was submitted.";
   }).catch(error=>{
     console.error("Failed to submit FPA assessment result",error);
-    saveStatus.textContent="Your result could not be submitted. Copy or save this summary and contact the assessment administrator.";
+    saveStatus.textContent=error.message==="You have already submitted an assessment."
+      ? error.message
+      : "Your result could not be submitted. Copy or save this summary and contact the assessment administrator.";
     saveStatus.style.color="var(--fail)";
   });
   window.scrollTo(0,0);

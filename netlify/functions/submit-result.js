@@ -16,6 +16,11 @@ function isNumberBetween(value, min, max) {
   return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
 }
 
+function isSessionId(value) {
+  return typeof value === "string"
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function validateBrokerResult(result) {
   if (
     typeof result.candidate_name !== "string" || !result.candidate_name.trim()
@@ -169,6 +174,9 @@ exports.handler = async (event) => {
   if (!isRecord(payload) || typeof payload.app_id !== "string" || !isRecord(payload.result)) {
     return jsonResponse(400, { error: "Missing app identifier or result." });
   }
+  if (!isSessionId(payload.result.session_id)) {
+    return jsonResponse(400, { error: "A valid browser session ID is required." });
+  }
 
   const definition = appDefinitions.find((app) => app.id === payload.app_id);
   const validate = validators[payload.app_id];
@@ -180,6 +188,7 @@ exports.handler = async (event) => {
   if (!record) {
     return jsonResponse(400, { error: "Result fields are missing or invalid." });
   }
+  record.session_id = payload.result.session_id;
 
   let client;
   try {
@@ -196,6 +205,9 @@ exports.handler = async (event) => {
   try {
     const { data, error } = await client.from(definition.table).insert(record).select("id").single();
     if (error) {
+      if (error.code === "23505") {
+        return jsonResponse(409, { error: "You have already submitted an assessment." });
+      }
       console.error(`Failed to store ${definition.id} result`, error);
       return jsonResponse(500, { error: "Could not save result." });
     }

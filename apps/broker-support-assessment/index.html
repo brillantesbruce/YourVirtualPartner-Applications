@@ -237,13 +237,14 @@
     <div class="card">
       <h3>Candidate details</h3>
       <label class="field-label" >Full name</label>
-      <input class="name-input" id="candidateName" placeholder="e.g. J. Nguyen" style="margin-bottom:14px;" required>
+      <input class="name-input" id="candidateName" maxlength="120" autocomplete="name" placeholder="e.g. J. Nguyen" style="margin-bottom:14px;" required>
       <label class="field-label">Role / team (optional)</label>
       <input class="name-input" id="candidateRole" placeholder="e.g. Broker Support &ndash; Credit Team">
     </div>
 
     <div class="btn-row">
       <button class="btn btn-primary" id="startBtn">Start assessment &amp; timer</button>
+      <span class="unanswered-flag" id="startError" role="alert"></span>
     </div>
   </div>
 
@@ -260,6 +261,7 @@
   <footer class="note">Internal training tool &middot; Your Virtual Partner Broker Support &middot; scoring is indicative and does not replace assessor sign-off on written reasoning.</footer>
 </div>
 
+<script src="/attempt-session.js"></script>
 <script>
 /* ============================================================
    QUESTION BANK
@@ -749,31 +751,36 @@ function scoreAll(){
 /* ============================================================
    RESULTS RENDER
    ============================================================ */
+let attemptSessionId = null;
 function submitResultsToBackend(payload){
   fetch('/.netlify/functions/submit-result', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({app_id:'broker-support-assessment', result:payload})
   }).then(res=>{
+    if(res.status===409) throw new Error("You have already submitted an assessment.");
     if(!res.ok) throw new Error('Bad response: '+res.status);
     const statusEl = document.getElementById('saveStatus');
     if(statusEl) statusEl.textContent = "Result saved.";
   }).catch(err=>{
     console.error('Failed to save quiz result', err);
     const statusEl = document.getElementById('saveStatus');
-    if(statusEl) statusEl.textContent = "Could not save your result automatically \u2014 please screenshot or print this page and send it to the quiz master.";
+    if(statusEl) statusEl.textContent = err.message.includes("already submitted")
+      ? err.message
+      : "Could not save your result automatically \u2014 please screenshot or print this page and send it to the quiz master.";
   });
 }
 
 function renderResults(elapsedSeconds){
   const {totalScore, perQuestion, sectionScores} = scoreAll();
   const pct = Math.round((totalScore/totalMarks)*1000)/10;
-  const name = document.getElementById('candidateName').value.trim() || "Candidate";
+  const name = document.getElementById('candidateName').value.trim();
   const role = document.getElementById('candidateRole').value.trim();
   const passed = pct >= 75;
 
   submitResultsToBackend({
     candidate_name: name,
+    session_id: attemptSessionId,
     candidate_role: role,
     total_score: totalScore,
     total_marks: totalMarks,
@@ -842,6 +849,23 @@ function renderResults(elapsedSeconds){
    WIRE UP
    ============================================================ */
 document.getElementById('startBtn').addEventListener('click', ()=>{
+  const nameInput = document.getElementById('candidateName');
+  const startError = document.getElementById('startError');
+  if(!nameInput.value.trim()){
+    nameInput.setCustomValidity("Enter your full name to start.");
+    nameInput.reportValidity();
+    nameInput.addEventListener("input", ()=>nameInput.setCustomValidity(""), {once:true});
+    return;
+  }
+  if(YVPAttemptSession.hasStarted("broker-support-assessment")){
+    startError.textContent = "You have already used your attempt for this assessment.";
+    return;
+  }
+  attemptSessionId = YVPAttemptSession.start("broker-support-assessment");
+  if(!attemptSessionId){
+    startError.textContent = "You have already used your attempt for this assessment.";
+    return;
+  }
   renderExam();
   document.getElementById('screen-intro').classList.add('hidden');
   document.getElementById('screen-exam').classList.remove('hidden');
@@ -850,6 +874,12 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
   startTimer();
   window.scrollTo({top:0, behavior:'smooth'});
 });
+
+if(YVPAttemptSession.hasStarted("broker-support-assessment")){
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('candidateName').disabled = true;
+  document.getElementById('startError').textContent = "You have already used your attempt for this assessment.";
+}
 
 document.getElementById('submitBtn').addEventListener('click', ()=>{
   if(submitted) return;

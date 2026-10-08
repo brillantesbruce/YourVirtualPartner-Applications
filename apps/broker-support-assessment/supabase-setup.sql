@@ -2,6 +2,7 @@
 
 create table quiz_attempts (
   id              uuid primary key default gen_random_uuid(),
+  session_id      uuid not null,
   candidate_name  text not null,
   candidate_role  text,
   total_score     numeric not null,
@@ -16,6 +17,7 @@ create table quiz_attempts (
 
 create index idx_quiz_attempts_submitted_at on quiz_attempts (submitted_at desc);
 create index idx_quiz_attempts_candidate_name on quiz_attempts (candidate_name);
+create unique index quiz_attempts_session_id_key on quiz_attempts (session_id);
 
 -- Row Level Security stays ON by default in Supabase with no policies,
 -- which means only the service_role key (used by the Netlify Functions)

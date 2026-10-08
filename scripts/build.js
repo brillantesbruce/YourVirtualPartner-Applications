@@ -40,6 +40,10 @@ copyAppFiles("calculators", [
 ]);
 fs.copyFileSync(path.join(root, "public", "index.html"), path.join(outputDirectory, "index.html"));
 fs.copyFileSync(path.join(root, "public", "admin.html"), path.join(outputDirectory, "admin.html"));
+fs.copyFileSync(
+  path.join(trainingDirectory, "src", "attempt-session.js"),
+  path.join(outputDirectory, "attempt-session.js"),
+);
 
 execFileSync(process.execPath, [viteCli, "build"], {
   cwd: trainingDirectory,

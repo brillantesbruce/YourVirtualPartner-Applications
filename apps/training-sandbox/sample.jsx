@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Clock, CheckCircle2, XCircle, Users, LayoutGrid, ClipboardList,
-  ArrowLeft, RotateCcw, FileText, ChevronRight, Circle, CheckCircle,
+  FileText, ChevronRight, Circle, CheckCircle,
 } from "lucide-react";
 
 const C = {
@@ -404,13 +404,15 @@ function Sidebar({ view, setView }) {
   );
 }
 
-function TopBar({ trainee, setTrainee, timerActive, elapsed }) {
+function TopBar({ trainee, setTrainee, timerActive, elapsed, nameError, attemptStarted }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 26px", borderBottom: `1px solid ${C.border}`, background: C.panel }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 12.5, color: C.sub }}>Trainee name</span>
         <input value={trainee} onChange={(e) => setTrainee(e.target.value)} placeholder="Enter your name"
+          required maxLength={80} aria-invalid={nameError} disabled={timerActive || attemptStarted}
           style={{ border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13, width: 180 }} />
+        {nameError && <span role="alert" style={{ color: C.error, fontSize: 12 }}>Enter your name before starting a case.</span>}
       </div>
       {timerActive && (
         <div className="mono fade-in" style={{ display: "flex", alignItems: "center", gap: 8, background: C.navy, color: C.goldLight, padding: "6px 14px", borderRadius: 20, fontSize: 14, fontWeight: 600 }}>
@@ -561,7 +563,7 @@ function CaseForm({ activeCase, formData, setFormData, onSubmit }) {
   );
 }
 
-function ResultView({ activeCase, result, saveError, onRetry, onBack }) {
+function ResultView({ activeCase, result, saveError }) {
   const grouped = {};
   result.fieldResults.forEach((r) => {
     const t = FIELD_TAB_TITLE[r.id] || "Other";
@@ -571,10 +573,6 @@ function ResultView({ activeCase, result, saveError, onRetry, onBack }) {
 
   return (
     <div style={{ padding: 26, maxWidth: 820 }} className="fade-in">
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: C.sub, fontSize: 12.5, cursor: "pointer", marginBottom: 14 }}>
-        <ArrowLeft size={14} /> Back to case list
-      </button>
-
       <div style={{ display: "flex", gap: 14, marginBottom: 20 }}>
         <div style={{ flex: 1, background: C.navy, borderRadius: 12, padding: 20, color: "white" }}>
           <div className="mono" style={{ fontSize: 11, color: C.goldLight }}>ACCURACY</div>
@@ -609,9 +607,6 @@ function ResultView({ activeCase, result, saveError, onRetry, onBack }) {
         </div>
       ))}
 
-      <button onClick={onRetry} style={{ display: "flex", alignItems: "center", gap: 6, background: C.gold, color: "white", border: "none", borderRadius: 45, padding: "10px 22px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
-        <RotateCcw size={14} /> Try another case
-      </button>
       {saveError && (
         <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8, background: C.errorBg, color: C.error, fontSize: 12.5 }}>
           {saveError}
@@ -646,6 +641,8 @@ function PipelineView() {
 export default function App() {
   const [view, setView] = useState("practice");
   const [trainee, setTrainee] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [attemptStarted, setAttemptStarted] = useState(() => window.YVPAttemptSession.hasStarted("training-sandbox"));
   const [activeCase, setActiveCase] = useState(null);
   const [formData, setFormData] = useState({});
   const [startTime, setStartTime] = useState(null);
@@ -663,6 +660,17 @@ export default function App() {
   }, [activeCase, result, startTime]);
 
   const pickCase = (c) => {
+    if (!trainee.trim()) {
+      setNameError(true);
+      return;
+    }
+    const sessionId = window.YVPAttemptSession.start("training-sandbox");
+    if (!sessionId) {
+      setAttemptStarted(true);
+      return;
+    }
+    setNameError(false);
+    setAttemptStarted(true);
     setActiveCase(c);
     setFormData({});
     setStartTime(Date.now());
@@ -696,7 +704,8 @@ export default function App() {
         body: JSON.stringify({
           app_id: "training-sandbox",
           result: {
-            trainee_name: trainee.trim() || "Anonymous",
+            trainee_name: trainee.trim(),
+            session_id: window.YVPAttemptSession.getId("training-sandbox"),
             case_id: activeCase.id,
             case_title: activeCase.title,
             accuracy_pct: accuracyPct,
@@ -704,6 +713,7 @@ export default function App() {
           },
         }),
       });
+      if (response.status === 409) throw new Error("You have already submitted an assessment.");
       if (!response.ok) throw new Error(`Submission failed with status ${response.status}.`);
     } catch (error) {
       console.error("Failed to save practice result:", error);
@@ -711,12 +721,15 @@ export default function App() {
     }
   };
 
-  const backToCases = () => { setActiveCase(null); setResult(null); };
-
   let body;
   if (view === "pipeline") body = <PipelineView />;
+  else if (!activeCase && attemptStarted) body = (
+    <div role="alert" style={{ padding: 30, maxWidth: 760, color: C.ink }}>
+      You have already used your Training Sandbox attempt.
+    </div>
+  );
   else if (!activeCase) body = <CaseSelect onPick={pickCase} />;
-  else if (result) body = <ResultView activeCase={activeCase} result={result} saveError={saveError} onRetry={backToCases} onBack={backToCases} />;
+  else if (result) body = <ResultView activeCase={activeCase} result={result} saveError={saveError} />;
   else body = <CaseForm key={activeCase.id} activeCase={activeCase} formData={formData} setFormData={setFormData} onSubmit={submit} />;
 
   return (
@@ -724,7 +737,8 @@ export default function App() {
       <style>{FONT_IMPORT}</style>
       <Sidebar view={view} setView={(v) => { setActiveCase(null); setResult(null); setView(v); }} />
       <div style={{ flex: 1, overflowY: "auto" }}>
-        <TopBar trainee={trainee} setTrainee={setTrainee} timerActive={!!activeCase && !result} elapsed={elapsed} />
+        <TopBar trainee={trainee} setTrainee={(value) => { setTrainee(value); if (value.trim()) setNameError(false); }}
+          timerActive={!!activeCase && !result} elapsed={elapsed} nameError={nameError} attemptStarted={attemptStarted} />
         {body}
       </div>
     </div>
