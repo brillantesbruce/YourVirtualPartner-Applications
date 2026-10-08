@@ -56,6 +56,7 @@ async function loadAppResults(definition) {
       count: data.length,
       attempts: data.map((row) => ({
         id: `${definition.id}-${row.id}`,
+        recordId: String(row.id),
         appId: definition.id,
         appName: definition.name,
         submittedAt: row.submitted_at,

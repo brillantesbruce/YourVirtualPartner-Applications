@@ -159,7 +159,12 @@ migration in `supabase/migrations/` with `npm run db:migrate`.
 
 The central admin page supports case-insensitive search by candidate name,
 app name, or assessment name, across the submissions currently loaded in
-the dashboard.
+the dashboard. Admins can select results to export a CSV, print a readable
+assessment summary with available answer review and timing details, or
+permanently delete selected records. Deletion requires confirmation and is
+limited to 100 selected records per request; it cannot be undone. When selected
+records span separate Supabase projects, an outage can result in partial
+deletion, which the dashboard reports.
 
 ## The app integration template
 
