@@ -3,7 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: two-pane tool — inputs on a quiet ledger panel left, results right; stacks to one column on phones */
 :root {
@@ -76,6 +76,18 @@ input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
 .check { display: flex; gap: 8px; align-items: center; font-size: 0.88rem; color: var(--muted); cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
 .seg2 { grid-template-columns: repeat(2, 1fr); }
 .seg2 label { font-size: 0.84rem; line-height: 1.3; }
+.selbox {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink);
+  font: 0.9rem var(--f-num); padding: 8px 10px;
+}
+.selbox:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.final {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 20px;
+  background: var(--accent-soft); border-radius: 10px; padding: 14px 16px;
+}
+.final .when { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.final .amt { font: 600 1.4rem var(--f-num); font-variant-numeric: tabular-nums; }
+.final .brk { flex-basis: 100%; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .hint { margin: 0; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .check input { accent-color: var(--accent); width: 16px; height: 16px; }
 
@@ -191,6 +203,13 @@ tr:last-child td { border-bottom: 0; }
           <div class="numbox"><span>$</span><input id="extra" type="number" inputmode="decimal" min="0" step="10" value="0"></div></div>
       </div>
       <div class="field">
+        <label class="check"><input type="checkbox" id="poOn"> Pay out the loan early</label>
+        <div class="field" id="poFields" hidden>
+          <label for="poAt">Pay out with</label>
+          <select id="poAt" class="selbox"></select>
+        </div>
+      </div>
+      <div class="field">
         <label class="check"><input type="checkbox" id="ppOn"> Charge an early repayment fee</label>
         <div class="field" id="ppFields" hidden>
           <div class="field-head"><label for="ppFee">Early repayment fee</label>
@@ -213,6 +232,12 @@ tr:last-child td { border-bottom: 0; }
             <div class="note" id="repNote"></div>
           </div>
           <div class="saving" id="saving" hidden></div>
+        </div>
+
+        <div class="final" id="final">
+          <div><span class="label" id="finLbl">Final payment</span><div class="when" id="finWhen"></div></div>
+          <div class="amt" id="finAmt"></div>
+          <div class="brk" id="finBrk" hidden></div>
         </div>
 
         <div class="stats">
@@ -286,14 +311,16 @@ tr:last-child td { border-bottom: 0; }
     return r === 0 ? L / N : L * r / (1 - Math.pow(1 + r, -N));
   }
 
-  function simulate(L, r, N, pay, extra) {
+  function simulate(L, r, N, pay, extra, payoutAt) {
     const rows = []; let bal = L, totInt = 0;
     for (let k = 1; k <= N && bal > 0.005; k++) {
       const int = bal * r;
-      let princ = Math.min(pay + extra - int, bal);
+      const reg = Math.min(pay + extra - int, bal);
+      const payout = !!payoutAt && k === payoutAt && bal > reg + 0.005;
+      const princ = payout ? bal : reg;
       if (princ <= 0) break;
       bal -= princ; totInt += int;
-      rows.push({ k, int, princ, paid: int + princ, bal: Math.max(bal, 0) });
+      rows.push({ k, int, princ, paid: int + princ, bal: Math.max(bal, 0), payout });
     }
     return { rows, totInt };
   }
@@ -334,22 +361,41 @@ tr:last-child td { border-bottom: 0; }
     const pay = payment(L, r, N);
     const feePP = moFee * 12 / n;
 
-    const base = simulate(L, r, N, pay, 0);
-    const withX = extra > 0 ? simulate(L, r, N, pay, extra) : base;
+    // early payout: list each repayment (with its date) as a payout option
+    const poOn = $('poOn').checked;
+    $('poFields').hidden = !poOn;
+    const sel = $('poAt');
+    const sig = N + '|' + n + '|' + $('start').value;
+    if (sel.dataset.sig !== sig) {
+      const prev = parseInt(sel.value, 10);
+      let opts = '';
+      for (let k = 1; k < N; k++) {
+        const d = periodDate(k, n);
+        opts += `<option value="${k}">Repayment ${k}${d ? ' · ' + d : ''}</option>`;
+      }
+      sel.innerHTML = opts;
+      sel.value = String(prev >= 1 && prev < N ? prev : Math.max(1, Math.round(N / 2)));
+      sel.dataset.sig = sig;
+    }
+    const payoutAt = poOn && N > 1 ? parseInt(sel.value, 10) || 0 : 0;
+
+    const base = simulate(L, r, N, pay, 0, 0);
+    const withX = (extra > 0 || payoutAt) ? simulate(L, r, N, pay, extra, payoutAt) : base;
     const periods = withX.rows.length;
 
     // early repayment fee: per extra repayment, or once if the loan is paid out early
     const isExtraRow = row => row.paid > pay + 0.005;
     const paidEarly = periods < base.rows.length;
+    const prepaying = extra > 0 || withX.rows.some(row => row.payout);
     let ppCount = 0, ppTotal = 0;
-    if (ppFee > 0 && extra > 0) {
+    if (ppFee > 0 && prepaying) {
       if (ppEach) { ppCount = withX.rows.filter(isExtraRow).length; ppTotal = ppFee * ppCount; }
       else if (paidEarly) { ppCount = 1; ppTotal = ppFee; }
     }
     let hint = '';
     if (ppOn) {
-      if (extra <= 0) hint = 'Only charged when you add an extra repayment.';
-      else if (ppEach) hint = ppCount + ' extra repayments × ' + fmt2.format(ppFee) + ' = ' + fmt.format(ppTotal);
+      if (!prepaying) hint = 'Only charged when you make extra repayments or pay out early.';
+      else if (ppEach) hint = ppCount + (ppCount === 1 ? ' prepayment' : ' prepayments') + ' × ' + fmt2.format(ppFee) + ' = ' + fmt.format(ppTotal);
       else hint = paidEarly ? 'Charged once when the loan is paid out early.' : 'Not charged, as the loan runs its full term.';
     }
     $('ppHint').textContent = hint;
@@ -361,7 +407,7 @@ tr:last-child td { border-bottom: 0; }
     const totRepaid = amount + totInt + totFees;
 
     // headline
-    const ppPP = ppEach && ppTotal > 0 ? ppFee : 0;
+    const ppPP = ppEach && ppTotal > 0 && extra > 0 ? ppFee : 0;
     $('rep').innerHTML = fmt2.format(pay + feePP + extra + ppPP).replace(/\.00$/, '') + '<small>/ ' + unit + '</small>';
     const parts = [];
     parts.push(fmt2.format(pay) + ' loan repayment');
@@ -371,7 +417,7 @@ tr:last-child td { border-bottom: 0; }
     $('repNote').textContent = parts.length > 1 ? 'Made up of ' + parts.join(' + ') : 'Principal and interest';
 
     // savings
-    if (extra > 0 && paidEarly) {
+    if (paidEarly) {
       const savedP = base.rows.length - periods;
       const saved = base.totInt - withX.totInt + feePP * savedP - ppTotal;
       const months = Math.round(savedP * 12 / n);
@@ -403,14 +449,45 @@ tr:last-child td { border-bottom: 0; }
     $('lI').textContent = fmt.format(totInt);
     $('lF').textContent = fmt.format(totFees);
 
-    drawChart(L, n, N, base.rows, extra > 0 ? withX.rows : null);
+    const planLabel = withX.rows.some(row => row.payout) ? 'With early payout' : 'With extra repayments';
+    drawChart(L, n, N, base.rows, withX !== base ? withX.rows : null, planLabel);
     const feeFor = (row, i, all) => feePP
       + (ppEach && ppTotal > 0 && isExtraRow(row) ? ppFee : 0)
       + (!ppEach && ppTotal > 0 && i === all.length - 1 ? ppTotal : 0);
+
+    // final payment (or payout amount when paying out early)
+    const li = withX.rows.length - 1, last = withX.rows[li];
+    $('final').hidden = !last;
+    if (last) {
+      const lf = feeFor(last, li, withX.rows);
+      const d = periodDate(last.k, n);
+      const regular = pay + extra;
+      $('finLbl').textContent = last.payout ? 'Payout amount' : 'Final payment';
+      $('finWhen').textContent = 'Repayment ' + last.k + ' of ' + N + (d ? ' · ' + d : '');
+      $('finAmt').textContent = fmt2.format(last.paid + lf);
+      let brk = '';
+      if (last.payout) {
+        brk = [fmt2.format(regular) + ' regular repayment', fmt2.format(last.paid - regular) + ' remaining balance']
+          .concat(lf > 0 ? [fmt2.format(lf) + ' early repayment fee'] : []).join(' + ');
+      } else {
+        if (last.paid < regular - 0.005) brk = 'Less than the regular ' + fmt2.format(regular) + ' because it only clears what is left owing.';
+        if (lf > 0) brk += (brk ? ' ' : '') + 'Includes ' + fmt2.format(lf) + ' early repayment fee.';
+      }
+      $('finBrk').textContent = brk;
+      $('finBrk').hidden = !brk;
+    }
+
     drawTable(withX.rows, n, feeFor);
   }
 
-  function drawChart(L, n, N, baseRows, xRows) {
+  function periodDate(k, n) {
+    const sv = /^(\d{4})-(\d{2})$/.exec($('start').value);
+    if (!sv) return '';
+    if (n === 12) return monFmt.format(new Date(+sv[1], +sv[2] - 1 + k - 1, 1));
+    return dayFmt.format(new Date(+sv[1], +sv[2] - 1, 1 + (k - 1) * (364 / n)));
+  }
+
+  function drawChart(L, n, N, baseRows, xRows, planLabel) {
     const W = 640, H = 250, m = { l: 58, r: 14, t: 12, b: 30 };
     const iw = W - m.l - m.r, ih = H - m.t - m.b;
     const years = N / n;
@@ -440,7 +517,7 @@ tr:last-child td { border-bottom: 0; }
     s += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--muted)" stroke-width="1"/>`;
     $('chart').innerHTML = s;
     $('chartLegend').innerHTML = xRows
-      ? '<span><i class="dot" style="background:var(--accent)"></i>With extra repayments</span><span><i class="dot" style="background:var(--muted)"></i>Minimum repayments</span>'
+      ? '<span><i class="dot" style="background:var(--accent)"></i>' + planLabel + '</span><span><i class="dot" style="background:var(--muted)"></i>Minimum repayments</span>'
       : '<span><i class="dot" style="background:var(--accent)"></i>Remaining balance</span>';
   }
 
@@ -452,6 +529,7 @@ tr:last-child td { border-bottom: 0; }
   document.querySelectorAll('input[name=view]').forEach(el => el.addEventListener('change', calc));
   $('start').addEventListener('input', calc);
   const monFmt = new Intl.DateTimeFormat('en-AU', { month: 'short', year: 'numeric' });
+  const dayFmt = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 
   function drawTable(rows, n, feeFor) {
     const monthly = document.querySelector('input[name=view]:checked').value === 'month';
