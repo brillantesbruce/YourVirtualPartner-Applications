@@ -37,6 +37,7 @@ copyAppFiles("calculators", [
   "default_calculator.html",
   "loan_and_amortisation_calculator.html",
   "repayment_schedule_builder.html",
+  "personal_loan_repayments.html"
 ]);
 fs.copyFileSync(path.join(root, "public", "index.html"), path.join(outputDirectory, "index.html"));
 fs.copyFileSync(path.join(root, "public", "admin.html"), path.join(outputDirectory, "admin.html"));
