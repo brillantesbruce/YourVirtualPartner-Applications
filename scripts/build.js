@@ -39,6 +39,13 @@ fs.copyFileSync(
   path.join(digitalMarketingDirectory, "Digital-Marketing-Manager-Certification-Exam.html"),
   path.join(digitalMarketingOutput, "index.html"),
 );
+const propertyManagementDirectory = path.join(appsDirectory, "property-management-assessment");
+const propertyManagementOutput = path.join(outputDirectory, "property-management-assessment");
+fs.mkdirSync(propertyManagementOutput, { recursive: true });
+fs.copyFileSync(
+  path.join(propertyManagementDirectory, "property-management-assistant-exam.html"),
+  path.join(propertyManagementOutput, "index.html"),
+);
 copyAppFiles("calculators", [
   "index.html",
   "default_calculator.html",

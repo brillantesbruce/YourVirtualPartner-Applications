@@ -36,6 +36,90 @@ const DIGITAL_MARKETING_SECTIONS = [
   "Video vs. Static Creative Strategy",
 ];
 
+const PROPERTY_MANAGEMENT_QUESTIONS = [
+  { section: 0, correct: 1, partial: [0, 3] },
+  { section: 0, correct: 2, partial: [0, 1, 3] },
+  { section: 0, correct: 2, partial: [0, 1, 3] },
+  { section: 1, correct: 2, partial: [0, 3] },
+  { section: 1, correct: 1, partial: [0, 2, 3] },
+  { section: 1, correct: 1, partial: [0, 2, 3] },
+  { section: 2, correct: 2, partial: [0, 1, 3] },
+  { section: 2, correct: 1, partial: [0, 2, 3] },
+  { section: 3, correct: 1, partial: [0, 2, 3] },
+  { section: 3, correct: 1, partial: [0, 2, 3] },
+  { section: 3, correct: 1, partial: [0, 2, 3] },
+  { section: 3, correct: 1, partial: [0, 2, 3] },
+  { section: 3, correct: 0, partial: [1, 2, 3] },
+  { section: 3, correct: 1, partial: [0, 2, 3] },
+  { section: 3, correct: 1, partial: [0, 2, 3] },
+];
+const PROPERTY_MANAGEMENT_SECTIONS = [
+  "Tenant Communication & Fair Housing",
+  "Maintenance Coordination",
+  "Financial & Administrative Accuracy",
+  "Scenario Judgment",
+];
+
+function validatePropertyManagementResult(result) {
+  if (
+    typeof result.candidate_name !== "string" || !result.candidate_name.trim()
+    || result.candidate_name.length > 120
+    || !Number.isInteger(result.elapsed_seconds) || result.elapsed_seconds < 0 || result.elapsed_seconds > 2100
+    || typeof result.auto_submitted !== "boolean"
+    || !Array.isArray(result.answers) || result.answers.length !== PROPERTY_MANAGEMENT_QUESTIONS.length
+    || !result.answers.every((answer) => isRecord(answer)
+      && Number.isInteger(answer.answer) && answer.answer >= -1 && answer.answer <= 3
+      && typeof answer.question === "string" && answer.question.length <= 1000
+      && Array.isArray(answer.options) && answer.options.length === 4
+      && answer.options.every((option) => typeof option === "string" && option.length <= 500))
+  ) return null;
+
+  const fullMarks = 100 / PROPERTY_MANAGEMENT_QUESTIONS.length;
+  const sectionScores = PROPERTY_MANAGEMENT_SECTIONS.map(() => 0);
+  const sectionMaxima = PROPERTY_MANAGEMENT_SECTIONS.map(() => 0);
+  const letters = ["A", "B", "C", "D"];
+  let rawScore = 0;
+  const answers = result.answers.map((answer, index) => {
+    const question = PROPERTY_MANAGEMENT_QUESTIONS[index];
+    const selectedIndex = answer.answer;
+    const isCorrect = selectedIndex === question.correct;
+    const earned = isCorrect ? fullMarks : question.partial.includes(selectedIndex) ? 2 : 0;
+    rawScore += earned;
+    sectionScores[question.section] += earned;
+    sectionMaxima[question.section] += fullMarks;
+
+    return {
+      number: index + 1,
+      topic: PROPERTY_MANAGEMENT_SECTIONS[question.section],
+      question: answer.question,
+      candidateAnswer: selectedIndex < 0 ? null : `${letters[selectedIndex]}) ${answer.options[selectedIndex]}`,
+      correctAnswer: `${letters[question.correct]}) ${answer.options[question.correct]}`,
+      result: isCorrect ? "Correct" : earned > 0 ? "Partial" : selectedIndex < 0 ? "Unanswered" : "Incorrect",
+      earned: Number(earned.toFixed(2)),
+      points: Number(fullMarks.toFixed(2)),
+    };
+  });
+
+  const score = Math.round(rawScore);
+  const scoreBand = score >= 90 ? "Excellent"
+    : score >= 75 ? "Good"
+      : score >= 60 ? "Adequate" : "Below 60";
+
+  return {
+    candidate_name: result.candidate_name.trim(),
+    score,
+    score_band: scoreBand,
+    passed: score >= 75,
+    elapsed_seconds: result.elapsed_seconds,
+    auto_submitted: result.auto_submitted,
+    section_scores: Object.fromEntries(PROPERTY_MANAGEMENT_SECTIONS.map((section, index) => [
+      section,
+      `${sectionScores[index].toFixed(1)} / ${sectionMaxima[index].toFixed(1)}`,
+    ])),
+    answers,
+  };
+}
+
 function validateDigitalMarketingResult(result) {
   if (
     typeof result.candidate_name !== "string" || !result.candidate_name.trim()
@@ -216,6 +300,7 @@ const validators = {
   "fpa-assessment": validateFpaResult,
   "paraplanner-assessment": validateParaplannerResult,
   "digital-marketing": validateDigitalMarketingResult,
+  "property-management-assessment": validatePropertyManagementResult,
 };
 
 exports.handler = async (event) => {

@@ -180,10 +180,13 @@
       const header = document.createElement("thead");
       const headerRow = document.createElement("tr");
       const broker = appId === "broker-support-assessment";
-      (broker
-        ? ["Question", "Topic", "Candidate response", "Marks"]
-        : ["Q", "Topic", "Candidate", "Correct", "Result", "Time"]
-      ).forEach((label) => {
+      const propertyManagement = appId === "property-management-assessment";
+      let answerHeaders = ["Q", "Topic", "Candidate", "Correct", "Result", "Time"];
+      if (broker) answerHeaders = ["Question", "Topic", "Candidate response", "Marks"];
+      else if (propertyManagement) {
+        answerHeaders = ["Question", "Section", "Candidate answer", "Best answer", "Marks"];
+      }
+      answerHeaders.forEach((label) => {
         const cell = document.createElement("th");
         cell.textContent = label;
         headerRow.appendChild(cell);
@@ -198,6 +201,12 @@
           appendCell(row, answer.question || answer.number);
           appendCell(row, answer.topic);
           appendCell(row, answer.candidateAnswer);
+          appendCell(row, `${Number(answer.earned || 0).toFixed(1)} / ${Number(answer.points || 0).toFixed(1)}`);
+        } else if (propertyManagement) {
+          appendCell(row, answer.question || answer.number);
+          appendCell(row, answer.topic);
+          appendCell(row, answer.candidateAnswer);
+          appendCell(row, answer.correctAnswer);
           appendCell(row, `${Number(answer.earned || 0).toFixed(1)} / ${Number(answer.points || 0).toFixed(1)}`);
         } else {
           appendCell(row, answer.number);
@@ -238,9 +247,12 @@
         appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
       } else if (attempt.appId === "digital-marketing") {
         appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
+      } else if (attempt.appId === "property-management-assessment") {
+        appendSummaryItem(summary, "Score band", details.score_band);
+        appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
       }
 
-      if (["broker-support-assessment", "digital-marketing"].includes(attempt.appId) && details.section_scores
+      if (["broker-support-assessment", "digital-marketing", "property-management-assessment"].includes(attempt.appId) && details.section_scores
         && typeof details.section_scores === "object") {
         const sectionScores = Object.entries(details.section_scores)
           .map(([section, score]) => `${section}: ${score}`)

@@ -15,6 +15,7 @@ connect using server-only service-role keys.
 | `fpa-assessment` | `/FPA-assessment/` | `fpa_assessment_submissions` |
 | `paraplanner-assessment` | `/Paraplanner-assessment/` | `paraplanner_assessment_submissions` |
 | `digital-marketing` | `/digital-marketing/` | `digital_marketing_submissions` |
+| `property-management-assessment` | `/property-management-assessment/` | `property_management_submissions` |
 | Calculators | `/calculators/` | None |
 
 ## Before deploying
@@ -29,11 +30,11 @@ connect using server-only service-role keys.
    - FPA: `apps/FPA-assessment/supabase/schema.sql`
    - Paraplanner: `apps/Paraplanner-assessment/supabase/schema.sql`
    - Digital Marketing: `apps/digital-marketing/supabase/schema.sql`
+   - Property Management: `apps/property-management-assessment/supabase/schema.sql`
 
-   The Bookkeeper and Training schemas remove browser-role access. The FPA and
-   Paraplanner schemas create private tables with RLS enabled and revoke
-   `anon`/`authenticated` access. Candidate submissions and admin reads go
-   through the Netlify functions.
+   These assessment schemas enable RLS and revoke `anon`/`authenticated`
+   access. Candidate submissions and admin reads go through the Netlify
+   functions.
 3. Create/select one Netlify site connected to this repository, with the
    **base directory set to the repository root**. The root `netlify.toml`
    builds the portal and deploys `netlify/functions`.
@@ -54,6 +55,8 @@ connect using server-only service-role keys.
    | `PARAPLANNER_ASSESSMENT_SUPABASE_SERVICE_ROLE_KEY` | Paraplanner service-role key |
    | `DIGITAL_MARKETING_SUPABASE_URL` | Digital Marketing Supabase project URL |
    | `DIGITAL_MARKETING_SUPABASE_SERVICE_ROLE_KEY` | Digital Marketing service-role key |
+   | `PROPERTY_MANAGEMENT_SUPABASE_URL` | Property Management Supabase project URL |
+   | `PROPERTY_MANAGEMENT_SUPABASE_SERVICE_ROLE_KEY` | Property Management service-role key |
 
    URLs are not secrets; service-role keys and `ADMIN_PASSWORD` must be
    configured as secrets. If apps share a Supabase project, repeating that
@@ -75,7 +78,7 @@ environment files containing those values.
 
 ## Local database and end-to-end testing
 
-Local development uses one local Supabase instance containing all six
+Local development uses one local Supabase instance containing all seven
 assessment tables. This is separate from every hosted Supabase project and
 does not copy or modify production data. The schema is created from
 `supabase/migrations/`.
@@ -102,7 +105,7 @@ does not copy or modify production data. The schema is created from
    Replace each `replace-with-local-service-role-key` placeholder in the
    root `.env` with that value. The local URL is
    `http://127.0.0.1:54321`; one local URL and service-role key are shared
-   across all six apps. The `.env` file is ignored by Git. Keep its values
+   across all seven apps. The `.env` file is ignored by Git. Keep its values
    local and never use a production service-role key for local testing.
 4. In another terminal, build and start the portal from the repository root:
 
@@ -157,6 +160,7 @@ SQL Editor before deploying:
 | FPA | `apps/FPA-assessment/supabase/session-lock-migration.sql` |
 | Paraplanner | `apps/Paraplanner-assessment/supabase/session-lock-migration.sql` |
 | Digital Marketing | `apps/digital-marketing/supabase/session-lock-migration.sql` |
+| Property Management | `apps/property-management-assessment/supabase/session-lock-migration.sql` |
 
 Each migration safely adds and backfills the session ID on existing rows
 before making it required and unique. Local Supabase applies the combined

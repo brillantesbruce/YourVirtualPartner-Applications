@@ -198,6 +198,30 @@ const appDefinitions = [
       };
     },
   },
+  {
+    id: "property-management-assessment",
+    name: "Property Management Assistant Exam",
+    table: "property_management_submissions",
+    urlVariable: "PROPERTY_MANAGEMENT_SUPABASE_URL",
+    keyVariable: "PROPERTY_MANAGEMENT_SUPABASE_SERVICE_ROLE_KEY",
+    select: "id, candidate_name, score, score_band, passed, elapsed_seconds, auto_submitted, section_scores, answers, submitted_at",
+    normalize(row) {
+      return {
+        candidate: row.candidate_name,
+        assessment: "Property Management Assistant Exam",
+        score: `${row.score} / 100`,
+        percentage: Number(row.score),
+        outcome: row.score_band,
+        durationSeconds: Number(row.elapsed_seconds),
+        details: {
+          score_band: row.score_band,
+          auto_submitted: row.auto_submitted,
+          section_scores: row.section_scores,
+          answers: Array.isArray(row.answers) ? row.answers : [],
+        },
+      };
+    },
+  },
 ];
 
 function createAppClient(definition) {
