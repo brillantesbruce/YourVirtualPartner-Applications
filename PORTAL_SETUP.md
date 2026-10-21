@@ -14,6 +14,7 @@ connect using server-only service-role keys.
 | `training-sandbox` | `/training-sandbox/` | `leaderboard_attempts` |
 | `fpa-assessment` | `/FPA-assessment/` | `fpa_assessment_submissions` |
 | `paraplanner-assessment` | `/Paraplanner-assessment/` | `paraplanner_assessment_submissions` |
+| `digital-marketing` | `/digital-marketing/` | `digital_marketing_submissions` |
 | Calculators | `/calculators/` | None |
 
 ## Before deploying
@@ -27,6 +28,7 @@ connect using server-only service-role keys.
    - Training Sandbox: `apps/training-sandbox/supabase/schema.sql`
    - FPA: `apps/FPA-assessment/supabase/schema.sql`
    - Paraplanner: `apps/Paraplanner-assessment/supabase/schema.sql`
+   - Digital Marketing: `apps/digital-marketing/supabase/schema.sql`
 
    The Bookkeeper and Training schemas remove browser-role access. The FPA and
    Paraplanner schemas create private tables with RLS enabled and revoke
@@ -50,6 +52,8 @@ connect using server-only service-role keys.
    | `FPA_ASSESSMENT_SUPABASE_SERVICE_ROLE_KEY` | FPA service-role key |
    | `PARAPLANNER_ASSESSMENT_SUPABASE_URL` | Paraplanner Supabase project URL |
    | `PARAPLANNER_ASSESSMENT_SUPABASE_SERVICE_ROLE_KEY` | Paraplanner service-role key |
+   | `DIGITAL_MARKETING_SUPABASE_URL` | Digital Marketing Supabase project URL |
+   | `DIGITAL_MARKETING_SUPABASE_SERVICE_ROLE_KEY` | Digital Marketing service-role key |
 
    URLs are not secrets; service-role keys and `ADMIN_PASSWORD` must be
    configured as secrets. If apps share a Supabase project, repeating that
@@ -71,7 +75,7 @@ environment files containing those values.
 
 ## Local database and end-to-end testing
 
-Local development uses one local Supabase instance containing all five
+Local development uses one local Supabase instance containing all six
 assessment tables. This is separate from every hosted Supabase project and
 does not copy or modify production data. The schema is created from
 `supabase/migrations/`.
@@ -98,7 +102,7 @@ does not copy or modify production data. The schema is created from
    Replace each `replace-with-local-service-role-key` placeholder in the
    root `.env` with that value. The local URL is
    `http://127.0.0.1:54321`; one local URL and service-role key are shared
-   across all five apps. The `.env` file is ignored by Git. Keep its values
+   across all six apps. The `.env` file is ignored by Git. Keep its values
    local and never use a production service-role key for local testing.
 4. In another terminal, build and start the portal from the repository root:
 
@@ -152,6 +156,7 @@ SQL Editor before deploying:
 | Training Sandbox | `apps/training-sandbox/supabase/session-lock-migration.sql` |
 | FPA | `apps/FPA-assessment/supabase/session-lock-migration.sql` |
 | Paraplanner | `apps/Paraplanner-assessment/supabase/session-lock-migration.sql` |
+| Digital Marketing | `apps/digital-marketing/supabase/session-lock-migration.sql` |
 
 Each migration safely adds and backfills the session ID on existing rows
 before making it required and unique. Local Supabase applies the combined
@@ -192,11 +197,12 @@ answers. Training Sandbox stores summary results only, so it has no
 field-by-field review. Failed/unconfigured result sources are reported
 separately rather than shown as successful empty results.
 
-Exam results screens do not offer an in-app restart or retake button. Because
-candidate submissions are anonymous and are not tied to a verified identity,
-this is a user-interface restriction only: refreshing or reopening an exam
-still permits another submission. Enforcing one attempt per person would
-require a reliable candidate identity and a separate access/identity policy.
+Each app prevents another attempt in the same browser tab session, and the
+database rejects duplicate submissions using that session ID. This is not
+identity verification: opening a new browser session, using another
+browser/device, or clearing browser data creates a different session ID and
+can permit another attempt. Enforcing one attempt per person would require a
+reliable candidate identity and a separate access/identity policy.
 
 ## Security and operational notes
 

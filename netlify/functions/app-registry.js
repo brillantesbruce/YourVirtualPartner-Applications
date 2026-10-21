@@ -175,6 +175,29 @@ const appDefinitions = [
       };
     },
   },
+  {
+    id: "digital-marketing",
+    name: "Digital Marketing Manager Certification Exam",
+    table: "digital_marketing_submissions",
+    urlVariable: "DIGITAL_MARKETING_SUPABASE_URL",
+    keyVariable: "DIGITAL_MARKETING_SUPABASE_SERVICE_ROLE_KEY",
+    select: "id, candidate_name, score, percentage, passed, elapsed_seconds, auto_submitted, section_scores, answers, submitted_at",
+    normalize(row) {
+      return {
+        candidate: row.candidate_name,
+        assessment: "Digital Marketing Manager Certification Exam",
+        score: `${row.score} / 40`,
+        percentage: Number(row.percentage),
+        outcome: row.passed ? "Pass" : "Not passed",
+        durationSeconds: Number(row.elapsed_seconds),
+        details: {
+          auto_submitted: row.auto_submitted,
+          section_scores: row.section_scores,
+          answers: Array.isArray(row.answers) ? row.answers : [],
+        },
+      };
+    },
+  },
 ];
 
 function createAppClient(definition) {

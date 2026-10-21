@@ -21,6 +21,68 @@ function isSessionId(value) {
     && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+const DIGITAL_MARKETING_ANSWER_KEY = [
+  1, 1, 1, 2, 0, 1, 2, 0,
+  1, 1, 2, 1, 1, 1, 1, 0,
+  0, 1, 1, 2, 1, 1, 0, 1,
+  2, 1, 1, 1, 1, 1, 1, 1,
+  0, 0, 0, 1, 1, 1, 1, 2,
+];
+const DIGITAL_MARKETING_SECTIONS = [
+  "Lead Generation",
+  "SEO",
+  "LinkedIn Marketing",
+  "Meta (Facebook/Instagram) Advertising",
+  "Video vs. Static Creative Strategy",
+];
+
+function validateDigitalMarketingResult(result) {
+  if (
+    typeof result.candidate_name !== "string" || !result.candidate_name.trim()
+    || result.candidate_name.length > 120
+    || !Number.isInteger(result.elapsed_seconds) || result.elapsed_seconds < 0 || result.elapsed_seconds > 3600
+    || typeof result.auto_submitted !== "boolean"
+    || !Array.isArray(result.answers) || result.answers.length !== DIGITAL_MARKETING_ANSWER_KEY.length
+    || !result.answers.every((answer) => isRecord(answer)
+      && Number.isInteger(answer.answer) && answer.answer >= -1 && answer.answer <= 3
+      && typeof answer.question === "string" && answer.question.length <= 1000)
+  ) return null;
+
+  const sectionScores = Object.fromEntries(DIGITAL_MARKETING_SECTIONS.map((section) => [section, 0]));
+  let score = 0;
+  const letters = ["A", "B", "C", "D"];
+  const answers = result.answers.map((answer, index) => {
+    const section = DIGITAL_MARKETING_SECTIONS[Math.floor(index / 8)];
+    const correctIndex = DIGITAL_MARKETING_ANSWER_KEY[index];
+    const selectedIndex = answer.answer;
+    const isCorrect = selectedIndex === correctIndex;
+    if (isCorrect) {
+      score += 1;
+      sectionScores[section] += 1;
+    }
+
+    return {
+      number: index + 1,
+      topic: section,
+      question: answer.question,
+      candidateAnswer: selectedIndex < 0 ? null : letters[selectedIndex],
+      correctAnswer: letters[correctIndex],
+      result: selectedIndex < 0 ? "Unanswered" : isCorrect ? "Correct" : "Incorrect",
+    };
+  });
+
+  return {
+    candidate_name: result.candidate_name.trim(),
+    score,
+    percentage: Math.round(score / DIGITAL_MARKETING_ANSWER_KEY.length * 100),
+    passed: score >= 30,
+    elapsed_seconds: result.elapsed_seconds,
+    auto_submitted: result.auto_submitted,
+    section_scores: sectionScores,
+    answers,
+  };
+}
+
 function validateBrokerResult(result) {
   if (
     typeof result.candidate_name !== "string" || !result.candidate_name.trim()
@@ -153,6 +215,7 @@ const validators = {
   "training-sandbox": validateTrainingResult,
   "fpa-assessment": validateFpaResult,
   "paraplanner-assessment": validateParaplannerResult,
+  "digital-marketing": validateDigitalMarketingResult,
 };
 
 exports.handler = async (event) => {

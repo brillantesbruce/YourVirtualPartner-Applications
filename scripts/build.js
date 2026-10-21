@@ -32,6 +32,13 @@ copyAppFiles("broker-support-assessment", ["index.html"]);
 copyAppFiles("bookkeeper-assessment", ["index.html"]);
 copyAppFiles("FPA-assessment", ["index.html"]);
 copyAppFiles("Paraplanner-assessment", ["index.html"]);
+const digitalMarketingDirectory = path.join(appsDirectory, "digital-marketing");
+const digitalMarketingOutput = path.join(outputDirectory, "digital-marketing");
+fs.mkdirSync(digitalMarketingOutput, { recursive: true });
+fs.copyFileSync(
+  path.join(digitalMarketingDirectory, "Digital-Marketing-Manager-Certification-Exam.html"),
+  path.join(digitalMarketingOutput, "index.html"),
+);
 copyAppFiles("calculators", [
   "index.html",
   "default_calculator.html",

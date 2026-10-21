@@ -236,9 +236,11 @@
         appendSummaryItem(summary, "Unanswered", details.unanswered_count);
         appendSummaryItem(summary, "Timing mode", details.timing_mode);
         appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
+      } else if (attempt.appId === "digital-marketing") {
+        appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
       }
 
-      if (attempt.appId === "broker-support-assessment" && details.section_scores
+      if (["broker-support-assessment", "digital-marketing"].includes(attempt.appId) && details.section_scores
         && typeof details.section_scores === "object") {
         const sectionScores = Object.entries(details.section_scores)
           .map(([section, score]) => `${section}: ${score}`)
