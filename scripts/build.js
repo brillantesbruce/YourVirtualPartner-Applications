@@ -46,6 +46,10 @@ fs.copyFileSync(
   path.join(propertyManagementDirectory, "property-management-assistant-exam.html"),
   path.join(propertyManagementOutput, "index.html"),
 );
+fs.copyFileSync(
+  path.join(propertyManagementDirectory, "questions.js"),
+  path.join(propertyManagementOutput, "questions.js"),
+);
 copyAppFiles("calculators", [
   "index.html",
   "default_calculator.html",

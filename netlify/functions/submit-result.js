@@ -1,4 +1,6 @@
 const { appDefinitions, createAppClient } = require("./app-registry");
+const PROPERTY_MANAGEMENT_PUBLIC_DATA = require("../../apps/property-management-assessment/questions");
+const PROPERTY_MANAGEMENT_ANSWER_KEY = require("./property-management-answer-key");
 
 function jsonResponse(statusCode, payload) {
   return {
@@ -36,29 +38,7 @@ const DIGITAL_MARKETING_SECTIONS = [
   "Video vs. Static Creative Strategy",
 ];
 
-const PROPERTY_MANAGEMENT_QUESTIONS = [
-  { section: 0, correct: 1, partial: [0, 3] },
-  { section: 0, correct: 2, partial: [0, 1, 3] },
-  { section: 0, correct: 2, partial: [0, 1, 3] },
-  { section: 1, correct: 2, partial: [0, 3] },
-  { section: 1, correct: 1, partial: [0, 2, 3] },
-  { section: 1, correct: 1, partial: [0, 2, 3] },
-  { section: 2, correct: 2, partial: [0, 1, 3] },
-  { section: 2, correct: 1, partial: [0, 2, 3] },
-  { section: 3, correct: 1, partial: [0, 2, 3] },
-  { section: 3, correct: 1, partial: [0, 2, 3] },
-  { section: 3, correct: 1, partial: [0, 2, 3] },
-  { section: 3, correct: 1, partial: [0, 2, 3] },
-  { section: 3, correct: 0, partial: [1, 2, 3] },
-  { section: 3, correct: 1, partial: [0, 2, 3] },
-  { section: 3, correct: 1, partial: [0, 2, 3] },
-];
-const PROPERTY_MANAGEMENT_SECTIONS = [
-  "Tenant Communication & Fair Housing",
-  "Maintenance Coordination",
-  "Financial & Administrative Accuracy",
-  "Scenario Judgment",
-];
+const PROPERTY_MANAGEMENT_SECTIONS = PROPERTY_MANAGEMENT_PUBLIC_DATA.sections;
 
 function validatePropertyManagementResult(result) {
   if (
@@ -66,37 +46,35 @@ function validatePropertyManagementResult(result) {
     || result.candidate_name.length > 120
     || !Number.isInteger(result.elapsed_seconds) || result.elapsed_seconds < 0 || result.elapsed_seconds > 2100
     || typeof result.auto_submitted !== "boolean"
-    || !Array.isArray(result.answers) || result.answers.length !== PROPERTY_MANAGEMENT_QUESTIONS.length
-    || !result.answers.every((answer) => isRecord(answer)
-      && Number.isInteger(answer.answer) && answer.answer >= -1 && answer.answer <= 3
-      && typeof answer.question === "string" && answer.question.length <= 1000
-      && Array.isArray(answer.options) && answer.options.length === 4
-      && answer.options.every((option) => typeof option === "string" && option.length <= 500))
+    || !Array.isArray(result.answers) || result.answers.length !== PROPERTY_MANAGEMENT_ANSWER_KEY.length
+    || !result.answers.every((answer) => Number.isInteger(answer) && answer >= -1 && answer <= 3)
   ) return null;
 
-  const fullMarks = 100 / PROPERTY_MANAGEMENT_QUESTIONS.length;
+  const fullMarks = 100 / PROPERTY_MANAGEMENT_ANSWER_KEY.length;
   const sectionScores = PROPERTY_MANAGEMENT_SECTIONS.map(() => 0);
   const sectionMaxima = PROPERTY_MANAGEMENT_SECTIONS.map(() => 0);
   const letters = ["A", "B", "C", "D"];
   let rawScore = 0;
-  const answers = result.answers.map((answer, index) => {
-    const question = PROPERTY_MANAGEMENT_QUESTIONS[index];
-    const selectedIndex = answer.answer;
-    const isCorrect = selectedIndex === question.correct;
-    const earned = isCorrect ? fullMarks : question.partial.includes(selectedIndex) ? 2 : 0;
+  const answers = result.answers.map((selectedIndex, index) => {
+    const publicQuestion = PROPERTY_MANAGEMENT_PUBLIC_DATA.qs[index];
+    const answerKey = PROPERTY_MANAGEMENT_ANSWER_KEY[index];
+    const sectionIndex = publicQuestion.sec - 1;
+    const isCorrect = selectedIndex === answerKey.correct;
+    const earned = isCorrect ? fullMarks : answerKey.partial.includes(selectedIndex) ? 2 : 0;
     rawScore += earned;
-    sectionScores[question.section] += earned;
-    sectionMaxima[question.section] += fullMarks;
+    sectionScores[sectionIndex] += earned;
+    sectionMaxima[sectionIndex] += fullMarks;
 
     return {
       number: index + 1,
-      topic: PROPERTY_MANAGEMENT_SECTIONS[question.section],
-      question: answer.question,
-      candidateAnswer: selectedIndex < 0 ? null : `${letters[selectedIndex]}) ${answer.options[selectedIndex]}`,
-      correctAnswer: `${letters[question.correct]}) ${answer.options[question.correct]}`,
+      topic: PROPERTY_MANAGEMENT_SECTIONS[sectionIndex],
+      question: publicQuestion.q,
+      candidateAnswer: selectedIndex < 0 ? null : `${letters[selectedIndex]}) ${publicQuestion.o[selectedIndex]}`,
+      correctAnswer: `${letters[answerKey.correct]}) ${publicQuestion.o[answerKey.correct]}`,
       result: isCorrect ? "Correct" : earned > 0 ? "Partial" : selectedIndex < 0 ? "Unanswered" : "Incorrect",
       earned: Number(earned.toFixed(2)),
       points: Number(fullMarks.toFixed(2)),
+      explanation: answerKey.explanation,
     };
   });
 
@@ -360,7 +338,9 @@ exports.handler = async (event) => {
       return jsonResponse(500, { error: "Could not save result." });
     }
 
-    return jsonResponse(200, { ok: true, id: data.id });
+    const response = { ok: true, id: data.id };
+    if (definition.id === "property-management-assessment") response.result = record;
+    return jsonResponse(200, response);
   } catch (error) {
     console.error(`Unexpected error storing ${definition.id} result`, error);
     return jsonResponse(500, { error: "Could not save result." });
