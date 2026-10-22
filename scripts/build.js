@@ -50,6 +50,17 @@ fs.copyFileSync(
   path.join(propertyManagementDirectory, "questions.js"),
   path.join(propertyManagementOutput, "questions.js"),
 );
+const realEstateDirectory = path.join(appsDirectory, "real-estate-assessment");
+const realEstateOutput = path.join(outputDirectory, "real-estate-assessment");
+fs.mkdirSync(realEstateOutput, { recursive: true });
+fs.copyFileSync(
+  path.join(realEstateDirectory, "real-estate-agent-assistant-certification-exam.html"),
+  path.join(realEstateOutput, "index.html"),
+);
+fs.copyFileSync(
+  path.join(realEstateDirectory, "questions.js"),
+  path.join(realEstateOutput, "questions.js"),
+);
 copyAppFiles("calculators", [
   "index.html",
   "default_calculator.html",

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Real Estate Agent Assistant Certification Exam</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef2f1;--surface:#ffffff;--ink:#15241f;--muted:#5b6b66;--line:#d5dfdc;--accent:#1f5f4e;--accent-soft:#e1efea;--pass:#1d7a46;--pass-soft:#e2f3e8;--fail:#b4322a;--fail-soft:#fae4e2;--warn:#a86a06;
+--f-display:"Source Serif 4",Georgia,"Times New Roman",serif;--f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1715;--surface:#17221f;--ink:#e4ece9;--muted:#97a8a2;--line:#2a3834;--accent:#5fbf9f;--accent-soft:#1c322b;--pass:#5cc98a;--pass-soft:#173324;--fail:#f0857c;--fail-soft:#3a1d1b;--warn:#e2a945;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1715;--surface:#17221f;--ink:#e4ece9;--muted:#97a8a2;--line:#2a3834;--accent:#5fbf9f;--accent-soft:#1c322b;--pass:#5cc98a;--pass-soft:#173324;--fail:#f0857c;--fail-soft:#3a1d1b;--warn:#e2a945;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:clamp(1.6rem,4vw,2.1rem)}h2{font-size:1.3rem}h3{font-size:1.05rem}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fact{border-top:2px solid var(--accent);padding-top:8px}
+.fact b{display:block;font-family:var(--f-mono);font-size:1.15rem}
+.fact span{font-size:.85rem;color:var(--muted)}
+label.field{display:flex;flex-direction:column;gap:6px;font-weight:500}
+input[type=text]{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:6px;padding:10px 18px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:is(input,button):focus-visible,.opt:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.rules{margin:0;padding-left:20px;color:var(--muted)}.rules li+li{margin-top:4px}
+.err{color:var(--fail);font-size:.9rem;min-height:1.2em}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:11;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.who{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{color:var(--muted);font-size:.9rem}
+.timer{font-family:var(--f-mono);font-size:1.05rem;padding:4px 10px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.timer.low{background:var(--fail-soft);color:var(--fail)}
+.progress{height:3px;background:var(--line)}.progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+#exam{margin-top:20px}
+.qhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.qnum{font-family:var(--f-mono);color:var(--muted);font-size:.9rem}
+.prompt{margin:0;font-size:1.05rem}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--surface);position:relative}
+.opt:hover{border-color:var(--accent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.key{flex:none;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:.85rem;color:var(--muted)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel .key{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.nav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.grid button{padding:6px 0;font-family:var(--f-mono);font-size:.85rem;font-weight:500}
+.grid button.done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.grid button.cur{outline:2px solid var(--ink);outline-offset:1px}
+.confirm{border:1px solid var(--warn);background:var(--surface);border-radius:8px;padding:16px}.confirm p{margin:0 0 12px}
+.verdict{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.score{font-family:var(--f-mono);font-size:2.6rem;line-height:1}.score small{font-size:1.1rem;color:var(--muted)}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:600;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase}
+.pill.pass{background:var(--pass-soft);color:var(--pass)}.pill.fail{background:var(--fail-soft);color:var(--fail)}
+.sec{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+.sec .bt{grid-column:1/-1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.sec .bt i{display:block;height:100%;background:var(--accent)}
+.sec b{font-family:var(--f-mono)}
+.rev{border-left:4px solid var(--line);padding:4px 0 4px 14px}
+.rev.ok{border-color:var(--pass)}.rev.no{border-color:var(--fail)}
+.rev p{margin:6px 0}.ok-t{color:var(--pass);font-weight:600}.no-t{color:var(--fail);font-weight:600}.muted{color:var(--muted)}
+@media (max-width:520px){.facts{grid-template-columns:1fr}.panel{padding:18px}}
+</style></head><body>
+<header class="bar" id="bar" hidden><div class="bar-in"><span class="who" id="barWho"></span><span class="meta" id="barCount"></span><span class="timer" id="timer">35:00</span></div><div class="progress"><i id="prog"></i></div></header>
+<main class="wrap">
+<section id="start" class="stack">
+  <div class="stack" style="gap:6px"><span class="eyebrow">Candidate assessment</span><h1>Real Estate Agent Assistant Certification Exam</h1><p class="muted" style="margin:0">Client communication, listings, transactions, compliance and admin</p></div>
+  <div class="facts"><div class="fact"><b>15</b><span>questions, 5 sections</span></div><div class="fact"><b>35 min</b><span>time limit</span></div><div class="fact"><b>12 / 15</b><span>pass mark (80%)</span></div></div>
+  <div class="panel stack">
+    <label class="field" for="cname">Full name<input type="text" id="cname" autocomplete="name" placeholder="e.g. Jordan Lee"></label>
+    <ul class="rules"><li>Choose the single BEST answer. Two options may look plausible, but only one is best.</li><li>Move between questions and change answers until you submit.</li><li>The timer starts when you press Start. At zero the exam submits automatically.</li><li>Unanswered questions are marked incorrect.</li></ul>
+    <div class="err" id="startErr"></div>
+    <div><button class="primary" id="startBtn">Start exam</button></div>
+  </div>
+</section>
+<section id="exam" class="stack" hidden>
+  <article class="panel stack" aria-live="polite">
+    <div class="qhead"><span class="eyebrow" id="qSec"></span><span class="qnum" id="qNum"></span></div>
+    <p class="prompt" id="qText"></p>
+    <div class="opts" id="qOpts" role="radiogroup"></div>
+  </article>
+  <div class="nav"><button id="prevBtn">← Previous</button><div class="row"><button class="primary" id="nextBtn">Next →</button><button id="subBtn">Submit exam</button></div></div>
+  <div class="panel stack"><span class="eyebrow">Question navigator</span><div class="grid" id="grid"></div></div>
+  <div class="confirm" id="confirm" hidden><p id="confirmMsg"></p><div class="row"><button class="primary" id="yesBtn">Submit now</button><button id="noBtn">Keep working</button></div></div>
+</section>
+<section id="result" class="stack" hidden></section>
+</main>
+<script src="/attempt-session.js"></script>
+<script src="/real-estate-assessment/questions.js"></script>
+<script>
+const D=window.REAL_ESTATE_QUESTIONS;
+const TOTAL=D.qs.length,LIMIT=35*60*1000,L="ABCD";
+const $=id=>document.getElementById(id);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+let ans=Array(TOTAL).fill(-1),cur=0,deadline=0,tick=null,name="",done=false,sessionId=null,startedAt=0;
+function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function start(){
+  name=$("cname").value.trim();
+  if(name.split(/\s+/).filter(Boolean).length<2){$("startErr").textContent="Please enter your full name (first and last) to begin.";return}
+  sessionId=YVPAttemptSession.start("real-estate-assessment");
+  if(!sessionId){$("startErr").textContent="You have already submitted an assessment.";$("startBtn").disabled=true;return}
+  $("start").hidden=true;$("exam").hidden=false;$("bar").hidden=false;$("barWho").textContent=name;
+  startedAt=Date.now();deadline=startedAt+LIMIT;tick=setInterval(()=>{const r=deadline-Date.now();$("timer").textContent=fmt(r);$("timer").classList.toggle("low",r<5*60000);if(r<=0)submit(true)},500);
+  $("timer").textContent=fmt(LIMIT);render();
+}
+function render(){
+  const q=D.qs[cur];
+  $("qSec").textContent="Section "+q.sec+" · "+D.sections[q.sec-1];
+  $("qNum").textContent="Question "+(cur+1)+" of "+TOTAL;
+  $("qText").textContent=q.q;
+  const box=$("qOpts");box.replaceChildren();
+  q.o.forEach((t,i)=>{
+    const lb=el("label","opt"+(ans[cur]===i?" sel":"")),r=el("input");
+    r.type="radio";r.name="q";r.checked=ans[cur]===i;r.onchange=()=>{ans[cur]=i;render()};
+    lb.append(r,el("span","key",L[i]),el("span","",t));box.append(lb);
+  });
+  const n=ans.filter(a=>a>=0).length;
+  $("barCount").textContent=n+"/"+TOTAL+" answered";$("prog").style.width=(n/TOTAL*100)+"%";
+  $("prevBtn").disabled=cur===0;$("nextBtn").disabled=cur===TOTAL-1;
+  const g=$("grid");g.replaceChildren();
+  ans.forEach((a,i)=>{const b=el("button",(a>=0?"done ":"")+(i===cur?"cur":""),i+1);b.setAttribute("aria-label","Question "+(i+1)+(a>=0?", answered":", unanswered"));b.onclick=()=>{cur=i;render();window.scrollTo(0,0)};g.append(b)});
+}
+function ask(){
+  const left=ans.filter(a=>a<0).length;
+  $("confirmMsg").textContent=left?"You have "+left+" unanswered question"+(left>1?"s":"")+". Unanswered questions are marked incorrect. Submit anyway?":"Submit your exam? You can’t change answers afterwards.";
+  $("confirm").hidden=false;$("confirm").scrollIntoView({block:"center"});
+}
+function renderResult(result){
+  const total=result.score;
+  const band=result.score_band==="Excellent"?["Excellent","Fully ready for the role."]:result.score_band==="Strong pass"?["Strong pass","Minor review recommended."]:result.score_band==="Pass"?["Pass","Meets the minimum standard."]:["Below 12","Review the compliance and transaction coordination sections before retesting."];
+  const R=$("result");R.hidden=false;R.replaceChildren();
+  const top=el("div","panel stack"),v=el("div","verdict"),s=el("div","score",String(total));
+  s.append(el("small","","/"+TOTAL));
+  const p=el("span","pill "+(result.passed?"pass":"fail"),result.passed?"Passed":"Not passed");
+  v.append(s,p,el("span","muted",result.percentage+"% · pass mark 80%"));
+  top.append(el("span","eyebrow","Results · "+name),v,el("p","",band[1]));
+  const secs=el("div","panel stack");secs.append(el("h2","","By section"));
+  D.sections.forEach(section=>{const [earned,maximum]=result.section_scores[section].split("/").map(Number);const d=el("div","sec");d.append(el("span","",section),el("b","",earned+" / "+maximum));const bt=el("div","bt"),f=el("i");f.style.width=(earned/maximum*100)+"%";bt.append(f);d.append(bt);secs.append(d)});
+  const rv=el("div","panel stack"),head=el("div","row");
+  head.append(el("h2","","Answer review"));
+  const fa=el("button","primary","All"),fm=el("button","","Missed only");head.append(fa,fm);rv.append(head);
+  const list=el("div","stack");rv.append(list);
+  const draw=only=>{list.replaceChildren();fa.className=only?"":"primary";fm.className=only?"primary":"";
+    result.answers.forEach(answer=>{const correct=answer.result==="Correct";if(only&&correct)return;
+      const d=el("div","rev "+(correct?"ok":"no"));
+      d.append(el("span","qnum","Q"+answer.number+" · "+answer.topic),el("p","",answer.question));
+      d.append(el("p",correct?"ok-t":"no-t",correct?"Correct: "+answer.correctAnswer:"Your answer: "+(answer.candidateAnswer||"none")));
+      if(!correct)d.append(el("p","ok-t","Correct: "+answer.correctAnswer));
+      d.append(el("p","muted",answer.explanation));list.append(d)});
+    if(!list.children.length)list.append(el("p","muted","No missed questions."))};
+  fa.onclick=()=>draw(false);fm.onclick=()=>draw(true);draw(false);
+  R.append(top,secs,rv);
+}
+function submit(autoSubmitted=false){
+  if(done)return;done=true;clearInterval(tick);
+  $("exam").hidden=true;$("bar").hidden=true;
+  const elapsedSeconds=Math.min(2100,Math.max(0,Math.round((Date.now()-startedAt)/1000)));
+  const R=$("result");R.hidden=false;R.replaceChildren();
+  const saveStatus=el("p","muted");
+  saveStatus.setAttribute("role","status");saveStatus.setAttribute("aria-live","polite");
+  saveStatus.textContent="Saving your result…";R.append(saveStatus);
+  fetch("/.netlify/functions/submit-result",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({app_id:"real-estate-assessment",result:{
+      session_id:sessionId,candidate_name:name,elapsed_seconds:elapsedSeconds,
+      auto_submitted:autoSubmitted,answers:ans
+    }})
+  }).then(async response=>{
+    const payload=await response.json();
+    if(response.status===409)throw new Error("You have already submitted an assessment.");
+    if(!response.ok)throw new Error(payload.error||"Could not save your result.");
+    renderResult(payload.result);
+    $("result").append(saveStatus);
+    saveStatus.textContent="Your result was submitted.";
+  }).catch(error=>{
+    saveStatus.className="err";
+    saveStatus.textContent=error.message||"Could not save your result. Please contact the administrator.";
+  });
+}
+$("startBtn").onclick=start;$("cname").onkeydown=e=>{if(e.key==="Enter")start()};
+$("prevBtn").onclick=()=>{if(cur>0){cur--;render()}};$("nextBtn").onclick=()=>{if(cur<TOTAL-1){cur++;render()}};
+$("subBtn").onclick=ask;$("noBtn").onclick=()=>{$("confirm").hidden=true};$("yesBtn").onclick=submit;
+</script></body></html>

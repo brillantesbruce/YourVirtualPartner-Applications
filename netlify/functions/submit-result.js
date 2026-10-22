@@ -1,6 +1,8 @@
 const { appDefinitions, createAppClient } = require("./app-registry");
 const PROPERTY_MANAGEMENT_PUBLIC_DATA = require("../../apps/property-management-assessment/questions");
 const PROPERTY_MANAGEMENT_ANSWER_KEY = require("./property-management-answer-key");
+const REAL_ESTATE_PUBLIC_DATA = require("../../apps/real-estate-assessment/questions");
+const REAL_ESTATE_ANSWER_KEY = require("./real-estate-answer-key");
 
 function jsonResponse(statusCode, payload) {
   return {
@@ -93,6 +95,62 @@ function validatePropertyManagementResult(result) {
     section_scores: Object.fromEntries(PROPERTY_MANAGEMENT_SECTIONS.map((section, index) => [
       section,
       `${sectionScores[index].toFixed(1)} / ${sectionMaxima[index].toFixed(1)}`,
+    ])),
+    answers,
+  };
+}
+
+function validateRealEstateResult(result) {
+  if (
+    typeof result.candidate_name !== "string" || !result.candidate_name.trim()
+    || result.candidate_name.length > 120
+    || result.candidate_name.trim().split(/\s+/).length < 2
+    || !Number.isInteger(result.elapsed_seconds) || result.elapsed_seconds < 0 || result.elapsed_seconds > 2100
+    || typeof result.auto_submitted !== "boolean"
+    || !Array.isArray(result.answers) || result.answers.length !== REAL_ESTATE_ANSWER_KEY.length
+    || !result.answers.every((answer) => Number.isInteger(answer) && answer >= -1 && answer <= 3)
+  ) return null;
+
+  const sectionScores = REAL_ESTATE_PUBLIC_DATA.sections.map(() => 0);
+  const sectionMaxima = REAL_ESTATE_PUBLIC_DATA.sections.map(() => 0);
+  const letters = ["A", "B", "C", "D"];
+  let score = 0;
+  const answers = result.answers.map((selectedIndex, index) => {
+    const question = REAL_ESTATE_PUBLIC_DATA.qs[index];
+    const answerKey = REAL_ESTATE_ANSWER_KEY[index];
+    const sectionIndex = question.sec - 1;
+    const correct = selectedIndex === answerKey.correct;
+    if (correct) {
+      score += 1;
+      sectionScores[sectionIndex] += 1;
+    }
+    sectionMaxima[sectionIndex] += 1;
+
+    return {
+      number: index + 1,
+      topic: REAL_ESTATE_PUBLIC_DATA.sections[sectionIndex],
+      question: question.q,
+      candidateAnswer: selectedIndex < 0 ? null : `${letters[selectedIndex]}) ${question.o[selectedIndex]}`,
+      correctAnswer: `${letters[answerKey.correct]}) ${question.o[answerKey.correct]}`,
+      result: selectedIndex < 0 ? "Unanswered" : correct ? "Correct" : "Incorrect",
+      earned: correct ? 1 : 0,
+      points: 1,
+      explanation: answerKey.explanation,
+    };
+  });
+  const scoreBand = score === 15 ? "Excellent" : score >= 13 ? "Strong pass" : score >= 12 ? "Pass" : "Below 12";
+
+  return {
+    candidate_name: result.candidate_name.trim(),
+    score,
+    score_band: scoreBand,
+    percentage: Math.round(score / REAL_ESTATE_ANSWER_KEY.length * 100),
+    passed: score >= 12,
+    elapsed_seconds: result.elapsed_seconds,
+    auto_submitted: result.auto_submitted,
+    section_scores: Object.fromEntries(REAL_ESTATE_PUBLIC_DATA.sections.map((section, index) => [
+      section,
+      `${sectionScores[index]} / ${sectionMaxima[index]}`,
     ])),
     answers,
   };
@@ -279,6 +337,7 @@ const validators = {
   "paraplanner-assessment": validateParaplannerResult,
   "digital-marketing": validateDigitalMarketingResult,
   "property-management-assessment": validatePropertyManagementResult,
+  "real-estate-assessment": validateRealEstateResult,
 };
 
 exports.handler = async (event) => {
@@ -339,7 +398,9 @@ exports.handler = async (event) => {
     }
 
     const response = { ok: true, id: data.id };
-    if (definition.id === "property-management-assessment") response.result = record;
+    if (["property-management-assessment", "real-estate-assessment"].includes(definition.id)) {
+      response.result = record;
+    }
     return jsonResponse(200, response);
   } catch (error) {
     console.error(`Unexpected error storing ${definition.id} result`, error);

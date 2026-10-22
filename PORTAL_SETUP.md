@@ -16,6 +16,7 @@ connect using server-only service-role keys.
 | `paraplanner-assessment` | `/Paraplanner-assessment/` | `paraplanner_assessment_submissions` |
 | `digital-marketing` | `/digital-marketing/` | `digital_marketing_submissions` |
 | `property-management-assessment` | `/property-management-assessment/` | `property_management_submissions` |
+| `real-estate-assessment` | `/real-estate-assessment/` | `real_estate_submissions` |
 | Calculators | `/calculators/` | None |
 
 ## Before deploying
@@ -31,6 +32,7 @@ connect using server-only service-role keys.
    - Paraplanner: `apps/Paraplanner-assessment/supabase/schema.sql`
    - Digital Marketing: `apps/digital-marketing/supabase/schema.sql`
    - Property Management: `apps/property-management-assessment/supabase/schema.sql`
+   - Real Estate: `apps/real-estate-assessment/supabase/schema.sql`
 
    These assessment schemas enable RLS and revoke `anon`/`authenticated`
    access. Candidate submissions and admin reads go through the Netlify
@@ -57,6 +59,8 @@ connect using server-only service-role keys.
    | `DIGITAL_MARKETING_SUPABASE_SERVICE_ROLE_KEY` | Digital Marketing service-role key |
    | `PROPERTY_MANAGEMENT_SUPABASE_URL` | Property Management Supabase project URL |
    | `PROPERTY_MANAGEMENT_SUPABASE_SERVICE_ROLE_KEY` | Property Management service-role key |
+   | `REAL_ESTATE_SUPABASE_URL` | Real Estate Supabase project URL |
+   | `REAL_ESTATE_SUPABASE_SERVICE_ROLE_KEY` | Real Estate service-role key |
 
    URLs are not secrets; service-role keys and `ADMIN_PASSWORD` must be
    configured as secrets. If apps share a Supabase project, repeating that
@@ -78,7 +82,7 @@ environment files containing those values.
 
 ## Local database and end-to-end testing
 
-Local development uses one local Supabase instance containing all seven
+Local development uses one local Supabase instance containing all eight
 assessment tables. This is separate from every hosted Supabase project and
 does not copy or modify production data. The schema is created from
 `supabase/migrations/`.
@@ -105,7 +109,7 @@ does not copy or modify production data. The schema is created from
    Replace each `replace-with-local-service-role-key` placeholder in the
    root `.env` with that value. The local URL is
    `http://127.0.0.1:54321`; one local URL and service-role key are shared
-   across all seven apps. The `.env` file is ignored by Git. Keep its values
+   across all eight apps. The `.env` file is ignored by Git. Keep its values
    local and never use a production service-role key for local testing.
 4. In another terminal, build and start the portal from the repository root:
 
@@ -161,6 +165,7 @@ SQL Editor before deploying:
 | Paraplanner | `apps/Paraplanner-assessment/supabase/session-lock-migration.sql` |
 | Digital Marketing | `apps/digital-marketing/supabase/session-lock-migration.sql` |
 | Property Management | `apps/property-management-assessment/supabase/session-lock-migration.sql` |
+| Real Estate | `apps/real-estate-assessment/supabase/session-lock-migration.sql` |
 
 Each migration safely adds and backfills the session ID on existing rows
 before making it required and unique. Local Supabase applies the combined
@@ -212,9 +217,10 @@ reliable candidate identity and a separate access/identity policy.
 
 - The admin results function checks `ADMIN_PASSWORD` server-side and uses
   server-only service-role keys to read the registered tables.
-- Candidate submissions are anonymous. Server validation checks shape and
-  bounds, but scores can still be forged by changing browser requests. Treat
-  these as interview/training records, not tamper-proof certification.
+- Candidate submissions are anonymous. Real Estate and Property Management
+  answer keys stay server-side and their scores are recomputed from submitted
+  answers. Other assessments may accept client-computed scores; treat those
+  results as interview/training records, not tamper-proof certification.
 - Keep the former app-specific Netlify sites until the central deployment is
   verified. The root site publishes its own `dist` paths and does not serve
   the legacy app-level Netlify Functions.

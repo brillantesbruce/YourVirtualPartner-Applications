@@ -181,9 +181,10 @@
       const headerRow = document.createElement("tr");
       const broker = appId === "broker-support-assessment";
       const propertyManagement = appId === "property-management-assessment";
+      const realEstate = appId === "real-estate-assessment";
       let answerHeaders = ["Q", "Topic", "Candidate", "Correct", "Result", "Time"];
       if (broker) answerHeaders = ["Question", "Topic", "Candidate response", "Marks"];
-      else if (propertyManagement) {
+      else if (propertyManagement || realEstate) {
         answerHeaders = ["Question", "Section", "Candidate answer", "Best answer", "Marks"];
       }
       answerHeaders.forEach((label) => {
@@ -202,7 +203,7 @@
           appendCell(row, answer.topic);
           appendCell(row, answer.candidateAnswer);
           appendCell(row, `${Number(answer.earned || 0).toFixed(1)} / ${Number(answer.points || 0).toFixed(1)}`);
-        } else if (propertyManagement) {
+        } else if (propertyManagement || realEstate) {
           appendCell(row, answer.question || answer.number);
           appendCell(row, answer.topic);
           appendCell(row, answer.candidateAnswer);
@@ -250,9 +251,12 @@
       } else if (attempt.appId === "property-management-assessment") {
         appendSummaryItem(summary, "Score band", details.score_band);
         appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
+      } else if (attempt.appId === "real-estate-assessment") {
+        appendSummaryItem(summary, "Score band", details.score_band);
+        appendSummaryItem(summary, "Auto-submitted", details.auto_submitted ? "Yes" : "No");
       }
 
-      if (["broker-support-assessment", "digital-marketing", "property-management-assessment"].includes(attempt.appId) && details.section_scores
+      if (["broker-support-assessment", "digital-marketing", "property-management-assessment", "real-estate-assessment"].includes(attempt.appId) && details.section_scores
         && typeof details.section_scores === "object") {
         const sectionScores = Object.entries(details.section_scores)
           .map(([section, score]) => `${section}: ${score}`)

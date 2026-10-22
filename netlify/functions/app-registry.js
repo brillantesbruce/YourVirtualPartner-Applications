@@ -222,6 +222,30 @@ const appDefinitions = [
       };
     },
   },
+  {
+    id: "real-estate-assessment",
+    name: "Real Estate Agent Assistant Certification Exam",
+    table: "real_estate_submissions",
+    urlVariable: "REAL_ESTATE_SUPABASE_URL",
+    keyVariable: "REAL_ESTATE_SUPABASE_SERVICE_ROLE_KEY",
+    select: "id, candidate_name, score, score_band, percentage, passed, elapsed_seconds, auto_submitted, section_scores, answers, submitted_at",
+    normalize(row) {
+      return {
+        candidate: row.candidate_name,
+        assessment: "Real Estate Agent Assistant Certification Exam",
+        score: `${row.score} / 15`,
+        percentage: Number(row.percentage),
+        outcome: row.score_band,
+        durationSeconds: Number(row.elapsed_seconds),
+        details: {
+          score_band: row.score_band,
+          auto_submitted: row.auto_submitted,
+          section_scores: row.section_scores,
+          answers: Array.isArray(row.answers) ? row.answers : [],
+        },
+      };
+    },
+  },
 ];
 
 function createAppClient(definition) {
